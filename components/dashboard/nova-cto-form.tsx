@@ -124,14 +124,16 @@ export function NovaCtoForm() {
         body: JSON.stringify(values),
       });
       const result = (await res.json()) as
-        | { success: true }
+        | { success: true; id: string }
         | { error: string };
       if (!res.ok || "error" in result) {
         toast.error("error" in result ? result.error : "Falha ao salvar.");
         return;
       }
-      toast.success("Clean up registrado com sucesso.");
-      router.push("/dashboard");
+      toast.success(
+        "Clean up registrado. Abra a mensagem para o técnico e envie pelo WhatsApp.",
+      );
+      router.push(`/dashboard/cto/${result.id}?mensagem=1`);
       router.refresh();
     } catch {
       toast.error("Não foi possível enviar o formulário. Tente de novo.");

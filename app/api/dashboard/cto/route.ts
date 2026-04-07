@@ -30,6 +30,7 @@ export async function POST(request: Request) {
 
   if ("success" in result && result.success) {
     revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/cto/${result.id}`);
     return NextResponse.json(result);
   }
 

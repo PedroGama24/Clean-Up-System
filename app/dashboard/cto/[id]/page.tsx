@@ -9,10 +9,13 @@ import { cn } from "@/lib/utils";
 
 type PageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ mensagem?: string }>;
 };
 
-export default async function EditCtoPage({ params }: PageProps) {
+export default async function EditCtoPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { mensagem } = await searchParams;
+  const autoOpenTecnicoDialog = mensagem === "1";
   const supabase = await createClient();
 
   const { data: cto, error: ctoError } = await supabase
@@ -70,20 +73,32 @@ export default async function EditCtoPage({ params }: PageProps) {
   const defaults = buildEditFormDefaults(cto, lotesList);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="font-semibold text-2xl tracking-tight">
-          Atualizar Auditoria da CTO
-        </h1>
-        <p className="max-w-2xl text-muted-foreground text-sm leading-relaxed">
-          <span className="font-medium text-foreground">{cto.nome_cto}</span>
-          {" — "}
-          Altere apenas o status das portas que sofreram mudança e clique em
-          Salvar para registrar o Clean Up de hoje. As vagas livres são
-          recalculadas automaticamente ao salvar.
-        </p>
-      </div>
-      <EditCtoForm defaultValues={defaults} />
+    <div className="space-y-8">
+      <section className="rounded-2xl border border-border/70 bg-card/50 p-6 shadow-md shadow-black/[0.03] ring-1 ring-border/40 backdrop-blur-sm sm:p-8 dark:shadow-black/25">
+        <div className="space-y-2">
+          <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+            Auditoria
+          </p>
+          <h1 className="font-semibold text-2xl text-foreground tracking-tight sm:text-3xl">
+            Atualizar Auditoria da CTO
+          </h1>
+          <p className="max-w-2xl text-muted-foreground text-sm leading-relaxed sm:text-[0.9375rem]">
+            <span className="font-medium text-foreground">{cto.nome_cto}</span>
+            {" — "}
+            Altere apenas o status das portas que sofreram mudança e clique em
+            Salvar para registrar o Clean Up de hoje. As vagas livres são
+            recalculadas automaticamente ao salvar. Use{" "}
+            <span className="font-medium text-foreground">
+              Gerar Mensagem para Técnico
+            </span>{" "}
+            para copiar o texto do WhatsApp.
+          </p>
+        </div>
+      </section>
+      <EditCtoForm
+        defaultValues={defaults}
+        autoOpenTecnicoDialog={autoOpenTecnicoDialog}
+      />
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -57,13 +57,27 @@ const step1Fields = [
 
 type EditCtoFormProps = {
   defaultValues: EditCtoFormValues;
+  /** Abre o modal de mensagem para técnico (ex.: após cadastrar CTO nova). */
+  autoOpenTecnicoDialog?: boolean;
 };
 
-export function EditCtoForm({ defaultValues }: EditCtoFormProps) {
+export function EditCtoForm({
+  defaultValues,
+  autoOpenTecnicoDialog = false,
+}: EditCtoFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [tecnicoDialogOpen, setTecnicoDialogOpen] = useState(false);
+  const didAutoOpenTecnico = useRef(false);
+
+  useEffect(() => {
+    if (!autoOpenTecnicoDialog || didAutoOpenTecnico.current) return;
+    didAutoOpenTecnico.current = true;
+    setTecnicoDialogOpen(true);
+    router.replace(pathname, { scroll: false });
+  }, [autoOpenTecnicoDialog, pathname, router]);
 
   const form = useForm<EditCtoFormValues>({
     resolver: zodResolver(editCtoFormSchema),

@@ -15,7 +15,7 @@ function parseOptionalInt(s: string | undefined): number | null {
 export async function createCtoWithLotesForUser(
   supabase: SupabaseClient,
   input: unknown,
-): Promise<{ success: true } | { error: string }> {
+): Promise<{ success: true; id: string } | { error: string }> {
   const parsed = novaCtoFormSchema.safeParse(input);
   if (!parsed.success) {
     const msg =
@@ -93,5 +93,5 @@ export async function createCtoWithLotesForUser(
     return { error: lotesError.message };
   }
 
-  return { success: true };
+  return { success: true, id: cto.id };
 }
