@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { PORT_STATUS } from "@/lib/constants/cto";
 import { editCtoFormSchema } from "@/lib/validations/edit-cto";
 
+import { resolveBkoNome } from "./resolve-bko-nome";
+
 function parseOptionalInt(s: string | undefined): number | null {
   if (!s?.trim()) return null;
   const n = Number(s);
@@ -12,6 +14,9 @@ function parseOptionalInt(s: string | undefined): number | null {
 /**
  * Atualiza cabeçalho da CTO e substitui todos os lotes (delete + insert).
  * A trigger `trg_lotes_recalc_cto` recalcula `vagas_atuais` e `ultimo_cleanup`.
+ *
+ * Capacidade 16→8: o payload deve trazer só portas 1–8; lotes 9–16 somem no replace.
+ * Capacidade 8→16: se vierem só 8 portas, completa 9–16 como Livre antes do insert.
  */
 export async function updateCtoWithLotesForUser(
   supabase: SupabaseClient,
@@ -27,58 +32,66 @@ export async function updateCtoWithLotesForUser(
 
   const data = parsed.data;
 
-  let area: string | null = null;
-  let primaria_codigo: string | null = null;
+  const { data: prevRow, error: prevErr } = await supabase
+    .from("cadastro_cto")
+    .select("capacidade")
+    .eq("id", data.id)
+    .maybeSingle();
 
-  if (data.areaOrigem === "codigo_interno") {
-    const code = data.areaCodigo?.trim() ?? "";
-    area = code.length > 0 ? code : null;
-  } else {
-    primaria_codigo = data.primariaCodigo!.trim();
+  if (prevErr) {
+    return { error: prevErr.message };
+  }
+  const prevCap = (prevRow?.capacidade ?? data.capacidade) as 8 | 16;
+
+  let portasNormalized = [...data.portas];
+  if (prevCap === 8 && data.capacidade === 16 && portasNormalized.length === 8) {
+    for (let n = 9; n <= 16; n++) {
+      portasNormalized.push({
+        numero_porta: n,
+        status: PORT_STATUS.LIVRE,
+        contrato: "",
+      });
+    }
+  }
+  if (prevCap === 16 && data.capacidade === 8) {
+    portasNormalized = portasNormalized.filter((p) => p.numero_porta <= 8);
+  }
+
+  if (portasNormalized.length !== data.capacidade) {
+    return {
+      error: "Número de portas não confere com a capacidade selecionada.",
+    };
   }
 
   const slot = parseOptionalInt(data.slot);
   const pon = parseOptionalInt(data.pon);
-  const potenciaRaw = data.potencia_dbm?.trim();
-  const potencia_dbm =
-    potenciaRaw === undefined || potenciaRaw === ""
+  const observacoes =
+    data.observacoes?.trim() === "" || data.observacoes == null
       ? null
-      : Number(potenciaRaw);
+      : data.observacoes.trim();
+
+  const bko_nome = await resolveBkoNome(supabase);
 
   const { error: updateError } = await supabase
     .from("cadastro_cto")
     .update({
-      nome_cto: data.nome_cto.trim(),
-      area,
-      primaria_codigo,
+      cidade: data.cidade,
+      identificacao_cto: data.identificacao_cto.trim(),
+      tecnico_campo: data.tecnico_campo,
+      bko_nome,
+      observacoes,
       olt: data.olt?.trim() || null,
       slot,
       pon,
       capacidade: data.capacidade,
-      potencia_dbm:
-        potencia_dbm != null && Number.isFinite(potencia_dbm)
-          ? potencia_dbm
-          : null,
     })
     .eq("id", data.id);
 
   if (updateError) {
-    if (updateError.code === "23505") {
-      return { error: "Já existe uma CTO com este nome." };
-    }
-    if (
-      updateError.message?.includes("primaria_codigo") ||
-      updateError.message?.includes("column")
-    ) {
-      return {
-        error:
-          "O banco ainda não tem as colunas Primária. Rode a migration em supabase/migrations/20260408120000_cadastro_cto_primaria.sql no SQL Editor.",
-      };
-    }
     return { error: updateError.message };
   }
 
-  const lotes = data.portas.map((p) => ({
+  const lotes = portasNormalized.map((p) => ({
     cto_id: data.id,
     numero_porta: p.numero_porta,
     status: p.status,

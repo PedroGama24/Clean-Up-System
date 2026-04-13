@@ -21,7 +21,7 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
   const { data: cto, error: ctoError } = await supabase
     .from("cadastro_cto")
     .select(
-      "id, nome_cto, area, primaria_codigo, olt, slot, pon, capacidade, potencia_dbm",
+      "id, cidade, identificacao_cto, tecnico_campo, bko_nome, observacoes, olt, slot, pon, capacidade",
     )
     .eq("id", id)
     .maybeSingle();
@@ -83,7 +83,11 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
             Atualizar Auditoria da CTO
           </h1>
           <p className="max-w-2xl text-muted-foreground text-sm leading-relaxed sm:text-[0.9375rem]">
-            <span className="font-medium text-foreground">{cto.nome_cto}</span>
+            <span className="font-medium text-foreground">
+              {cto.identificacao_cto}
+            </span>
+            {" — "}
+            <span className="text-muted-foreground">{cto.cidade}</span>
             {" — "}
             Altere apenas o status das portas que sofreram mudança e clique em
             Salvar para registrar o Clean Up de hoje. As vagas livres são

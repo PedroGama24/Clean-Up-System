@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { PORT_STATUS } from "@/lib/constants/cto";
 import { novaCtoFormSchema } from "@/lib/validations/nova-cto";
 
+import { resolveBkoNome } from "./resolve-bko-nome";
+
 function parseOptionalInt(s: string | undefined): number | null {
   if (!s?.trim()) return null;
   const n = Number(s);
@@ -26,55 +28,32 @@ export async function createCtoWithLotesForUser(
 
   const data = parsed.data;
 
-  let area: string | null = null;
-  let primaria_codigo: string | null = null;
-
-  if (data.areaOrigem === "codigo_interno") {
-    const code = data.areaCodigo?.trim() ?? "";
-    area = code.length > 0 ? code : null;
-  } else {
-    primaria_codigo = data.primariaCodigo!.trim();
-  }
-
   const slot = parseOptionalInt(data.slot);
   const pon = parseOptionalInt(data.pon);
-  const potenciaRaw = data.potencia_dbm?.trim();
-  const potencia_dbm =
-    potenciaRaw === undefined || potenciaRaw === ""
+  const observacoes =
+    data.observacoes?.trim() === "" || data.observacoes == null
       ? null
-      : Number(potenciaRaw);
+      : data.observacoes.trim();
+
+  const bko_nome = await resolveBkoNome(supabase);
 
   const { data: cto, error: ctoError } = await supabase
     .from("cadastro_cto")
     .insert({
-      nome_cto: data.nome_cto.trim(),
-      area,
-      primaria_codigo,
+      cidade: data.cidade,
+      identificacao_cto: data.identificacao_cto.trim(),
+      tecnico_campo: data.tecnico_campo,
+      bko_nome,
+      observacoes,
       olt: data.olt?.trim() || null,
       slot,
       pon,
       capacidade: data.capacidade,
-      potencia_dbm:
-        potencia_dbm != null && Number.isFinite(potencia_dbm)
-          ? potencia_dbm
-          : null,
     })
     .select("id")
     .single();
 
   if (ctoError) {
-    if (ctoError.code === "23505") {
-      return { error: "Já existe uma CTO com este nome." };
-    }
-    if (
-      ctoError.message?.includes("primaria_codigo") ||
-      ctoError.message?.includes("column")
-    ) {
-      return {
-        error:
-          "O banco ainda não tem as colunas Primária. Rode a migration em supabase/migrations/20260408120000_cadastro_cto_primaria.sql no SQL Editor.",
-      };
-    }
     return { error: ctoError.message };
   }
 

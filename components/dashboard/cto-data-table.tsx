@@ -19,57 +19,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatAreaColumn } from "@/lib/area-display";
 import { formatDateTimePtBr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type CadastroCtoRow = {
   id: string;
-  nome_cto: string;
-  area: string | null;
-  primaria_codigo?: string | null;
-  olt: string | null;
-  slot: number | null;
-  pon: number | null;
+  cidade: string;
+  identificacao_cto: string;
+  tecnico_campo: string;
+  bko_nome: string | null;
   capacidade: number;
-  potencia_dbm: string | number | null;
   ultimo_cleanup: string | null;
   vagas_atuais: number;
 };
 
 const baseColumns: ColumnDef<CadastroCtoRow>[] = [
   {
-    accessorKey: "nome_cto",
-    header: "Nome da CTO",
+    accessorKey: "cidade",
+    header: "Cidade",
+    cell: ({ getValue }) => (getValue() as string) ?? "—",
+  },
+  {
+    accessorKey: "identificacao_cto",
+    header: "Identificação CTO",
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.nome_cto}</span>
+      <span className="font-medium">{row.original.identificacao_cto}</span>
     ),
   },
   {
-    id: "area_display",
-    header: "Área",
-    cell: ({ row }) => formatAreaColumn(row.original),
+    accessorKey: "tecnico_campo",
+    header: "Técnico",
+    cell: ({ getValue }) => {
+      const v = getValue() as string;
+      return v ? <span className="max-w-[14rem] truncate">{v}</span> : "—";
+    },
   },
   {
-    accessorKey: "olt",
-    header: "OLT",
+    accessorKey: "bko_nome",
+    header: "BKO",
     cell: ({ getValue }) => (getValue() as string | null) ?? "—",
-  },
-  {
-    accessorKey: "slot",
-    header: "Slot",
-    cell: ({ getValue }) => {
-      const v = getValue() as number | null;
-      return v != null ? String(v) : "—";
-    },
-  },
-  {
-    accessorKey: "pon",
-    header: "PON",
-    cell: ({ getValue }) => {
-      const v = getValue() as number | null;
-      return v != null ? String(v) : "—";
-    },
   },
   {
     accessorKey: "capacidade",
@@ -90,7 +78,7 @@ const baseColumns: ColumnDef<CadastroCtoRow>[] = [
 
 const actionsColumn: ColumnDef<CadastroCtoRow> = {
   id: "actions",
-  header: () => <span className="text-muted-foreground">Atualizar</span>,
+  header: () => <span className="text-muted-foreground">Ações</span>,
   cell: ({ row }) => (
     <Link
       href={`/dashboard/cto/${row.original.id}`}
@@ -98,7 +86,7 @@ const actionsColumn: ColumnDef<CadastroCtoRow> = {
         buttonVariants({ variant: "outline", size: "sm" }),
         "inline-flex gap-1.5 no-underline",
       )}
-      aria-label={`Atualizar auditoria da CTO ${row.original.nome_cto}`}
+      aria-label={`Atualizar auditoria da CTO ${row.original.identificacao_cto}`}
     >
       <RefreshCw className="size-3.5 shrink-0" aria-hidden />
       Atualizar
@@ -115,8 +103,7 @@ type CtoDataTableProps = {
 
 export function CtoDataTable({ data, showRowActions }: CtoDataTableProps) {
   const columns = useMemo(
-    () =>
-      showRowActions ? [...baseColumns, actionsColumn] : baseColumns,
+    () => (showRowActions ? [...baseColumns, actionsColumn] : baseColumns),
     [showRowActions],
   );
 

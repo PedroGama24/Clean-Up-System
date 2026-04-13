@@ -21,6 +21,7 @@ const PENDING_MESSAGE =
   "Sua conta foi criada e está aguardando aprovação do Administrador de TI para ser liberada.";
 
 export function RegisterForm() {
+  const [nomeCompleto, setNomeCompleto] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -39,6 +40,11 @@ export function RegisterForm() {
       setError("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
+    const nome = nomeCompleto.trim();
+    if (nome.length < 3) {
+      setError("Informe o nome completo (mínimo 3 caracteres).");
+      return;
+    }
     setPending(true);
     const supabase = createClient();
     const origin =
@@ -46,7 +52,10 @@ export function RegisterForm() {
     const { error: signError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: origin ? { emailRedirectTo: `${origin}/login` } : undefined,
+      options: {
+        ...(origin ? { emailRedirectTo: `${origin}/login` } : {}),
+        data: { nome_completo: nome },
+      },
     });
     setPending(false);
     if (signError) {
@@ -103,6 +112,19 @@ export function RegisterForm() {
               {error}
             </p>
           ) : null}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="register-nome">Nome completo</Label>
+            <Input
+              id="register-nome"
+              name="nomeCompleto"
+              type="text"
+              autoComplete="name"
+              required
+              value={nomeCompleto}
+              onChange={(e) => setNomeCompleto(e.target.value)}
+              placeholder="Nome e sobrenome"
+            />
+          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="register-email">E-mail</Label>
             <Input

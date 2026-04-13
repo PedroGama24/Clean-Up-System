@@ -1,6 +1,10 @@
 import { z } from "zod";
 
+import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
 import { PORT_STATUS } from "@/lib/constants/cto";
+import { isTecnicoCampo } from "@/lib/constants/tecnico-campo";
+
+const CIDADE_SET = new Set<string>(CTO_CIDADES);
 
 export const PORT_STATUSES = [
   PORT_STATUS.COM_CONTRATO,
@@ -26,13 +30,18 @@ const portRowSchema = z
 
 export const novaCtoFormSchema = z
   .object({
-    nome_cto: z.string().min(1, "Informe o nome da CTO"),
-    /** Área conhecida (código BKO) ou fluxo sem área → Primária. */
-    areaOrigem: z.enum(["codigo_interno", "sem_area"]),
-    /** Código da área digitado pelo BKO (quando areaOrigem === codigo_interno). */
-    areaCodigo: z.string().optional(),
-    /** Obrigatório se areaOrigem === "sem_area". */
-    primariaCodigo: z.string().optional(),
+    cidade: z
+      .string()
+      .min(1, "Selecione a cidade")
+      .refine((c) => CIDADE_SET.has(c), "Cidade inválida"),
+    identificacao_cto: z
+      .string()
+      .min(1, "Informe a identificação da CTO")
+      .max(500),
+    tecnico_campo: z
+      .string()
+      .min(1, "Selecione o técnico de campo")
+      .refine((s) => isTecnicoCampo(s), "Técnico inválido"),
     olt: z.string().optional(),
     slot: z
       .string()
@@ -48,38 +57,13 @@ export const novaCtoFormSchema = z
         (s) => s == null || s === "" || /^-?\d+$/.test(s.trim()),
         "PON deve ser um número inteiro",
       ),
-    potencia_dbm: z
-      .string()
-      .optional()
-      .refine(
-        (s) =>
-          s == null ||
-          s === "" ||
-          (Number.isFinite(Number(s)) && !Number.isNaN(Number(s))),
-        "Potência inválida",
-      ),
     capacidade: z.union([z.literal(8), z.literal(16)], {
       error: "Selecione a capacidade da caixa (8 ou 16 portas)",
     }),
+    observacoes: z.string().max(4000).optional(),
     portas: z.array(portRowSchema),
   })
   .superRefine((data, ctx) => {
-    if (data.areaOrigem === "codigo_interno" && !data.areaCodigo?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Digite o código da área",
-        path: ["areaCodigo"],
-      });
-    }
-    if (data.areaOrigem === "sem_area") {
-      if (!data.primariaCodigo?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Informe o código de referência Primária",
-          path: ["primariaCodigo"],
-        });
-      }
-    }
     if (data.portas.length !== data.capacidade) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

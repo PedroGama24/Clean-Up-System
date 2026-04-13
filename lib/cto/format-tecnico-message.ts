@@ -1,21 +1,6 @@
 import { PORT_STATUS } from "@/lib/constants/cto";
 import type { EditCtoFormValues } from "@/lib/validations/edit-cto";
 
-/** Texto da coluna Área / Primária para mensagens ao técnico. */
-export function areaLineFromEditForm(
-  v: Pick<
-    EditCtoFormValues,
-    "areaOrigem" | "areaCodigo" | "primariaCodigo"
-  >,
-): string {
-  if (v.areaOrigem === "codigo_interno") {
-    const c = v.areaCodigo?.trim();
-    return c && c.length > 0 ? c : "—";
-  }
-  const p = v.primariaCodigo?.trim();
-  return p ? `Primária: ${p}` : "—";
-}
-
 /** Lista em português: "3, 5, 8 e 12". */
 export function formatPortasLivresList(nums: number[]): string {
   const sorted = [...nums].sort((a, b) => a - b);
@@ -38,15 +23,16 @@ export function formatPortasLivresList(nums: number[]): string {
 export function buildTecnicoCleanUpMessage(
   values: EditCtoFormValues,
 ): string {
-  const nome = values.nome_cto.trim() || "—";
-  const area = areaLineFromEditForm(values);
+  const idCto = values.identificacao_cto.trim() || "—";
+  const cidade = values.cidade;
+  const tecnico = values.tecnico_campo.trim() || "—";
   const livres = values.portas.filter((p) => p.status === PORT_STATUS.LIVRE);
   const vagasLivres = livres.length;
   const nums = livres.map((p) => p.numero_porta);
   const portasText = formatPortasLivresList(nums);
 
   return `✅ *Clean Up Concluído - Virtus Telecom*
-*CTO:* ${nome} | *Área:* ${area}
+*CTO:* ${idCto} | *Cidade:* ${cidade} | *Técnico:* ${tecnico}
 *Vagas Livres:* ${vagasLivres}
 *Portas Disponíveis:* ${portasText}`;
 }

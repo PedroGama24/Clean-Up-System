@@ -1,68 +1,116 @@
 "use client";
 
 import { FilterX } from "lucide-react";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
 
 import { CtoDataTable, type CadastroCtoRow } from "@/components/dashboard/cto-data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatAreaColumn } from "@/lib/area-display";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
+import { TECNICOS_CAMPO } from "@/lib/constants/tecnico-campo";
 import { cn } from "@/lib/utils";
 
-function rowMatchesSearch(row: CadastroCtoRow, q: string): boolean {
-  const t = q.trim().toLowerCase();
-  if (!t) return true;
-  if (row.nome_cto.toLowerCase().includes(t)) return true;
-  if (row.area?.toLowerCase().includes(t)) return true;
-  if (row.primaria_codigo?.toLowerCase().includes(t)) return true;
-  if (formatAreaColumn(row).toLowerCase().includes(t)) return true;
-  if (row.olt?.toLowerCase().includes(t)) return true;
-  return false;
+/** Valor interno do item “sem filtro”; o rótulo exibido é sempre “Todas”/“Todos”. */
+const ALL = "__all__";
+
+function FacetTriggerLabel({
+  value,
+  emptyLabel,
+}: {
+  value: string;
+  emptyLabel: string;
+}) {
+  return (
+    <span
+      data-slot="select-value"
+      className={cn(
+        "line-clamp-1 flex flex-1 text-left",
+        !value && "text-muted-foreground",
+      )}
+    >
+      {value || emptyLabel}
+    </span>
+  );
 }
 
 type QuickFilter = "none" | "criticas";
 
 type DashboardCtoSectionProps = {
   data: CadastroCtoRow[];
+  distinctBkos: string[];
+  metrics: {
+    totalCtos: number;
+    totalVagasLivres: number;
+    criticas: number;
+    totalPortas: number;
+  };
 };
 
-export function DashboardCtoSection({ data }: DashboardCtoSectionProps) {
-  const [search, setSearch] = useState("");
+function useFilterQuery() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [pending, startTransition] = useTransition();
+
+  function pushFilters(next: Record<string, string | undefined | null>) {
+    const sp = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(next)) {
+      if (value == null || String(value).trim() === "") {
+        sp.delete(key);
+      } else {
+        sp.set(key, String(value).trim());
+      }
+    }
+    const qs = sp.toString();
+    startTransition(() => {
+      router.replace(qs ? `${pathname}?${qs}` : pathname);
+    });
+  }
+
+  return { searchParams, pushFilters, pending };
+}
+
+export function DashboardCtoSection({
+  data,
+  distinctBkos,
+  metrics,
+}: DashboardCtoSectionProps) {
+  const { searchParams, pushFilters, pending } = useFilterQuery();
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("none");
 
-  const afterSearch = useMemo(
-    () => data.filter((row) => rowMatchesSearch(row, search)),
-    [data, search],
-  );
+  const q = searchParams.get("q") ?? "";
+  const cidade = searchParams.get("cidade") ?? "";
+  const tecnico = searchParams.get("tecnico") ?? "";
+  const bko = searchParams.get("bko") ?? "";
 
   const filtered = useMemo(() => {
     if (quickFilter === "criticas") {
-      return afterSearch.filter((row) => row.vagas_atuais <= 1);
+      return data.filter((row) => row.vagas_atuais <= 1);
     }
-    return afterSearch;
-  }, [afterSearch, quickFilter]);
+    return data;
+  }, [data, quickFilter]);
 
+  const hasFacetFilters = cidade !== "" || tecnico !== "" || bko !== "";
   const hasActiveFilters =
-    search.trim() !== "" || quickFilter === "criticas";
+    q.trim() !== "" || hasFacetFilters || quickFilter === "criticas";
 
   function clearAllFilters() {
-    setSearch("");
     setQuickFilter("none");
+    pushFilters({ q: undefined, cidade: undefined, tecnico: undefined, bko: undefined });
   }
 
   function toggleCriticasFilter() {
     setQuickFilter((prev) => (prev === "criticas" ? "none" : "criticas"));
   }
-
-  const metrics = useMemo(() => {
-    const totalCtos = data.length;
-    const totalVagasLivres = data.reduce((acc, r) => acc + r.vagas_atuais, 0);
-    const criticas = data.filter((r) => r.vagas_atuais <= 1).length;
-    const totalPortas = data.reduce((acc, r) => acc + r.capacidade, 0);
-    return { totalCtos, totalVagasLivres, criticas, totalPortas };
-  }, [data]);
 
   const cardInteractiveClass =
     "cursor-pointer transition-colors hover:border-ring/50 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -185,32 +233,122 @@ export function DashboardCtoSection({ data }: DashboardCtoSectionProps) {
         </Card>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-          <div className="max-w-md flex-1 space-y-2">
-            <Label htmlFor="cto-search">Busca</Label>
-            <Input
-              id="cto-search"
-              placeholder="Nome da CTO, área, Primária ou OLT…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoComplete="off"
-            />
+      <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-muted/10 p-4 sm:p-5">
+        <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+          Filtros
+        </p>
+        <div className="grid gap-4 lg:grid-cols-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter-cidade">Cidade</Label>
+            <Select
+              value={cidade || ALL}
+              onValueChange={(v) =>
+                pushFilters({ cidade: v === ALL ? undefined : v })
+              }
+              disabled={pending}
+            >
+              <SelectTrigger id="filter-cidade" className="h-8 w-full" size="default">
+                <FacetTriggerLabel value={cidade} emptyLabel="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todas</SelectItem>
+                {CTO_CIDADES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          {hasActiveFilters ? (
+          <div className="space-y-2">
+            <Label htmlFor="filter-tecnico">Técnico</Label>
+            <Select
+              value={tecnico || ALL}
+              onValueChange={(v) =>
+                pushFilters({ tecnico: v === ALL ? undefined : v })
+              }
+              disabled={pending}
+            >
+              <SelectTrigger id="filter-tecnico" className="h-8 w-full" size="default">
+                <FacetTriggerLabel value={tecnico} emptyLabel="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todos</SelectItem>
+                {TECNICOS_CAMPO.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="filter-bko">BKO</Label>
+            <Select
+              value={bko || ALL}
+              onValueChange={(v) =>
+                pushFilters({ bko: v === ALL ? undefined : v })
+              }
+              disabled={pending}
+            >
+              <SelectTrigger id="filter-bko" className="h-8 w-full" size="default">
+                <FacetTriggerLabel value={bko} emptyLabel="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todos</SelectItem>
+                {distinctBkos.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 lg:col-span-1">
+            <Label htmlFor="cto-search">Busca geral</Label>
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                const raw = String(fd.get("q") ?? "");
+                pushFilters({ q: raw.trim() === "" ? undefined : raw });
+              }}
+            >
+              <Input
+                id="cto-search"
+                name="q"
+                key={q}
+                defaultValue={q}
+                placeholder="Identificação CTO ou contrato…"
+                autoComplete="off"
+                className="h-8 flex-1"
+                disabled={pending}
+              />
+              <Button type="submit" size="sm" disabled={pending}>
+                Buscar
+              </Button>
+            </form>
+          </div>
+        </div>
+        {hasActiveFilters ? (
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="shrink-0 gap-2"
+              className="gap-2"
               onClick={clearAllFilters}
+              disabled={pending}
             >
               <FilterX className="size-4" aria-hidden />
-              Limpar Filtro
+              Limpar filtros
             </Button>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
+      </div>
 
+      <div className="space-y-3">
         {data.length > 0 && filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed bg-card/40 px-6 py-10 text-center">
             <p className="text-muted-foreground text-sm">

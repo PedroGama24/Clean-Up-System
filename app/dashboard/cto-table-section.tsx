@@ -1,23 +1,57 @@
-import { DashboardCtoSection } from "@/components/dashboard/dashboard-cto-section";
 import { type CadastroCtoRow } from "@/components/dashboard/cto-data-table";
+import { DashboardCtoSection } from "@/components/dashboard/dashboard-cto-section";
+import { fetchDashboardCtos } from "@/lib/cto/fetch-dashboard-ctos";
+import { fetchDashboardMetrics } from "@/lib/cto/fetch-dashboard-metrics";
 import { createClient } from "@/lib/supabase/server";
 
-export async function CtoTableSection() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("cadastro_cto")
-    .select(
-      "id, nome_cto, area, primaria_codigo, olt, slot, pon, capacidade, potencia_dbm, ultimo_cleanup, vagas_atuais",
-    )
-    .order("nome_cto", { ascending: true });
+export type DashboardSearchParams = {
+  q?: string;
+  cidade?: string;
+  tecnico?: string;
+  bko?: string;
+};
 
-  if (error) {
+export async function CtoTableSection({
+  searchParams = {},
+}: {
+  searchParams?: DashboardSearchParams;
+}) {
+  const supabase = await createClient();
+
+  try {
+    const [{ rows, distinctBkos }, metricRows] = await Promise.all([
+      fetchDashboardCtos(supabase, {
+        q: searchParams.q,
+        cidade: searchParams.cidade,
+        tecnico: searchParams.tecnico,
+        bko: searchParams.bko,
+      }),
+      fetchDashboardMetrics(supabase),
+    ]);
+
+    const totalCtos = metricRows.length;
+    const totalVagasLivres = metricRows.reduce((acc, r) => acc + r.vagas_atuais, 0);
+    const criticas = metricRows.filter((r) => r.vagas_atuais <= 1).length;
+    const totalPortas = metricRows.reduce((acc, r) => acc + r.capacidade, 0);
+
+    return (
+      <DashboardCtoSection
+        data={rows as CadastroCtoRow[]}
+        distinctBkos={distinctBkos}
+        metrics={{
+          totalCtos,
+          totalVagasLivres,
+          criticas,
+          totalPortas,
+        }}
+      />
+    );
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Erro desconhecido";
     return (
       <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-destructive text-sm">
-        Erro ao carregar CTOs: {error.message}
+        Erro ao carregar CTOs: {message}
       </p>
     );
   }
-
-  return <DashboardCtoSection data={(data ?? []) as CadastroCtoRow[]} />;
 }

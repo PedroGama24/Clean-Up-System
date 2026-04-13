@@ -2,11 +2,24 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { CtoTableSection } from "@/app/dashboard/cto-table-section";
+import type { DashboardSearchParams } from "@/app/dashboard/cto-table-section";
 import { CtoTableSkeleton } from "@/app/dashboard/cto-table-skeleton";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function DashboardPage() {
+type PageProps = {
+  searchParams: Promise<DashboardSearchParams>;
+};
+
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const suspenseKey = [
+    sp.q ?? "",
+    sp.cidade ?? "",
+    sp.tecnico ?? "",
+    sp.bko ?? "",
+  ].join("|");
+
   return (
     <div className="space-y-8">
       <section className="rounded-2xl border border-border/70 bg-card/50 p-6 shadow-md shadow-black/[0.03] ring-1 ring-border/40 backdrop-blur-sm sm:p-8 dark:shadow-black/25">
@@ -20,8 +33,8 @@ export default function DashboardPage() {
             </h1>
             <p className="max-w-xl text-muted-foreground text-sm leading-relaxed sm:text-[0.9375rem]">
               Listagem com ocupação, vagas livres e último clean up. Use os
-              cards acima da tabela para filtros rápidos e a busca para localizar
-              por nome, área, Primária ou OLT.
+              filtros por cidade, técnico e BKO, e a busca geral para localizar
+              por identificação da CTO ou número de contrato.
             </p>
           </div>
           <Link
@@ -38,8 +51,8 @@ export default function DashboardPage() {
 
       <section className="rounded-2xl border border-border/60 bg-card/30 p-1 shadow-sm ring-1 ring-border/30 sm:p-1.5 dark:bg-card/20">
         <div className="rounded-xl bg-background/60 p-3 sm:p-4 dark:bg-background/40">
-          <Suspense fallback={<CtoTableSkeleton />}>
-            <CtoTableSection />
+          <Suspense key={suspenseKey} fallback={<CtoTableSkeleton />}>
+            <CtoTableSection searchParams={sp} />
           </Suspense>
         </div>
       </section>

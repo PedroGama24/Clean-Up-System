@@ -7,11 +7,11 @@ import { useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { TecnicoCampoCombobox } from "@/components/dashboard/tecnico-campo-combobox";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -21,6 +21,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,6 +35,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
 import { PORT_STATUS } from "@/lib/constants/cto";
 import { cn } from "@/lib/utils";
 import {
@@ -37,14 +46,12 @@ import {
 } from "@/lib/validations/nova-cto";
 
 const step1Fields = [
-  "nome_cto",
-  "areaOrigem",
-  "areaCodigo",
-  "primariaCodigo",
+  "cidade",
+  "identificacao_cto",
+  "tecnico_campo",
   "olt",
   "slot",
   "pon",
-  "potencia_dbm",
 ] as const satisfies readonly (keyof NovaCtoFormValues)[];
 
 export function NovaCtoForm() {
@@ -55,14 +62,13 @@ export function NovaCtoForm() {
   const form = useForm<NovaCtoFormValues>({
     resolver: zodResolver(novaCtoFormSchema),
     defaultValues: {
-      nome_cto: "",
-      areaOrigem: "codigo_interno",
-      areaCodigo: "",
-      primariaCodigo: "",
+      cidade: "BMA",
+      identificacao_cto: "",
+      tecnico_campo: "",
       olt: "",
       slot: "",
       pon: "",
-      potencia_dbm: "",
+      observacoes: "",
       capacidade: 8,
       portas: [],
     },
@@ -84,10 +90,9 @@ export function NovaCtoForm() {
   });
 
   const capacidade = watch("capacidade");
-  const areaOrigem = watch("areaOrigem");
 
   const stepLabels = useMemo(
-    () => ["Dados da CTO", "Capacidade", "Portas"],
+    () => ["Dados da CTO", "Capacidade", "Portas", "Observações"],
     [],
   );
 
@@ -113,6 +118,12 @@ export function NovaCtoForm() {
     const cap = getValues("capacidade");
     syncPortRows(cap);
     setStep(3);
+  }
+
+  async function goToStep4() {
+    const ok = await trigger(["portas"]);
+    if (!ok) return;
+    setStep(4);
   }
 
   async function onSubmit(values: NovaCtoFormValues) {
@@ -178,75 +189,67 @@ export function NovaCtoForm() {
             <CardContent className="pt-6">
               <FieldSet>
                 <FieldGroup>
-                  <Field data-invalid={!!errors.nome_cto}>
-                    <FieldLabel htmlFor="nome_cto">Nome da CTO</FieldLabel>
-                    <Input
-                      id="nome_cto"
-                      autoComplete="off"
-                      {...register("nome_cto")}
-                    />
-                    <FieldError errors={[errors.nome_cto]} />
-                  </Field>
-
-                  <Field data-invalid={!!errors.areaOrigem}>
-                    <FieldLabel htmlFor="areaOrigem">Área</FieldLabel>
-                    <select
-                      id="areaOrigem"
-                      className={cn(
-                        "h-8 w-full max-w-lg rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none",
-                        "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                  <Field data-invalid={!!errors.cidade}>
+                    <FieldLabel htmlFor="cidade">Cidade</FieldLabel>
+                    <Controller
+                      name="cidade"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger
+                            id="cidade"
+                            className="h-8 w-full max-w-lg"
+                            size="default"
+                          >
+                            <SelectValue placeholder="Selecione a cidade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CTO_CIDADES.map((c) => (
+                              <SelectItem key={c} value={c}>
+                                {c}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       )}
-                      {...register("areaOrigem")}
-                    >
-                      <option value="codigo_interno">
-                        Área identificada (código do sistema BKO)
-                      </option>
-                      <option value="sem_area">
-                        Não há área — preencher Primária
-                      </option>
-                    </select>
-                    <FieldDescription>
-                      Escolha se conhece o <strong>código da área</strong> (digita
-                      abaixo) ou se não há área e informa só o{" "}
-                      <strong>código de referência Primária</strong>.
-                    </FieldDescription>
-                    <FieldError errors={[errors.areaOrigem]} />
+                    />
+                    <FieldError errors={[errors.cidade]} />
                   </Field>
 
-                  {areaOrigem === "codigo_interno" && (
-                    <Field data-invalid={!!errors.areaCodigo}>
-                      <FieldLabel htmlFor="areaCodigo">Código da área</FieldLabel>
-                      <Input
-                        id="areaCodigo"
-                        className="max-w-md"
-                        placeholder="Ex.: 04, 12, 3…"
-                        autoComplete="off"
-                        {...register("areaCodigo")}
-                      />
-                      <FieldError errors={[errors.areaCodigo]} />
-                    </Field>
-                  )}
+                  <Field data-invalid={!!errors.identificacao_cto}>
+                    <FieldLabel htmlFor="identificacao_cto">
+                      Identificação CTO
+                    </FieldLabel>
+                    <Input
+                      id="identificacao_cto"
+                      className="max-w-lg"
+                      autoComplete="off"
+                      {...register("identificacao_cto")}
+                    />
+                    <FieldError errors={[errors.identificacao_cto]} />
+                  </Field>
 
-                  {areaOrigem === "sem_area" && (
-                    <div className="rounded-xl border border-dashed bg-muted/20 p-4">
-                      <p className="mb-3 font-medium text-sm">Primária</p>
-                      <FieldGroup>
-                        <Field data-invalid={!!errors.primariaCodigo}>
-                          <FieldLabel htmlFor="primariaCodigo">
-                            Código de referência (Primária)
-                          </FieldLabel>
-                          <Input
-                            id="primariaCodigo"
-                            placeholder="Referência que o BKO usa no sistema"
-                            autoComplete="off"
-                            className="max-w-md"
-                            {...register("primariaCodigo")}
-                          />
-                          <FieldError errors={[errors.primariaCodigo]} />
-                        </Field>
-                      </FieldGroup>
-                    </div>
-                  )}
+                  <Field data-invalid={!!errors.tecnico_campo}>
+                    <FieldLabel htmlFor="tecnico_campo">
+                      Técnico de campo
+                    </FieldLabel>
+                    <Controller
+                      name="tecnico_campo"
+                      control={control}
+                      render={({ field }) => (
+                        <TecnicoCampoCombobox
+                          id="tecnico_campo"
+                          value={field.value}
+                          onChange={field.onChange}
+                          invalid={!!errors.tecnico_campo}
+                        />
+                      )}
+                    />
+                    <FieldError errors={[errors.tecnico_campo]} />
+                  </Field>
 
                   <Field data-invalid={!!errors.olt}>
                     <FieldLabel htmlFor="olt">OLT</FieldLabel>
@@ -266,16 +269,6 @@ export function NovaCtoForm() {
                       <FieldError errors={[errors.pon]} />
                     </Field>
                   </div>
-
-                  <Field data-invalid={!!errors.potencia_dbm}>
-                    <FieldLabel htmlFor="potencia_dbm">Potência (dBm)</FieldLabel>
-                    <Input
-                      id="potencia_dbm"
-                      inputMode="decimal"
-                      {...register("potencia_dbm")}
-                    />
-                    <FieldError errors={[errors.potencia_dbm]} />
-                  </Field>
                 </FieldGroup>
               </FieldSet>
 
@@ -430,6 +423,40 @@ export function NovaCtoForm() {
                   type="button"
                   variant="outline"
                   onClick={() => setStep(2)}
+                >
+                  Voltar
+                </Button>
+                <Button type="button" onClick={goToStep4}>
+                  Próximo
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 4 && (
+          <Card>
+            <CardHeader className="border-b border-border/60">
+              <CardTitle className="text-base">Passo 4 — Observações</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              <Field data-invalid={!!errors.observacoes}>
+                <FieldLabel htmlFor="observacoes">Observações (opcional)</FieldLabel>
+                <Textarea
+                  id="observacoes"
+                  rows={5}
+                  className="max-w-2xl"
+                  placeholder="Detalhes adicionais para a equipe…"
+                  {...register("observacoes")}
+                />
+                <FieldError errors={[errors.observacoes]} />
+              </Field>
+
+              <div className="flex flex-wrap justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(3)}
                 >
                   Voltar
                 </Button>
