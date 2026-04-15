@@ -63,9 +63,6 @@ function inferTecnologiaSp(cto: CtoHeader): CtoTecnologia | "" {
   ) {
     return "HW";
   }
-  if (cto.possui_cordoaria === true || cto.possui_cordoaria === false) {
-    return "NK";
-  }
   if (cto.identificacao_cto?.trim()) {
     return "FH";
   }

@@ -31,8 +31,29 @@ export function buildTecnicoCleanUpMessage(
   const nums = livres.map((p) => p.numero_porta);
   const portasText = formatPortasLivresList(nums);
 
+  const livresOrdenadas = [...livres].sort(
+    (a, b) => a.numero_porta - b.numero_porta,
+  );
+  const detalhePortas =
+    livresOrdenadas.length === 0
+      ? ""
+      : livresOrdenadas
+          .map((p) => {
+            const c = p.contrato?.trim();
+            if (c) {
+              return `Porta ${p.numero_porta}: contrato liberado ${c}`;
+            }
+            return `Porta ${p.numero_porta}: sem contrato informado`;
+          })
+          .join("\n");
+
+  const blocoDetalhe =
+    detalhePortas === ""
+      ? ""
+      : `\n*Detalhe (portas livres / contrato):*\n${detalhePortas}`;
+
   return `✅ *Clean Up Concluído - Virtus Telecom*
 *CTO:* ${idCto} | *Cidade:* ${cidade} | *Técnico:* ${tecnico}
 *Vagas Livres:* ${vagasLivres}
-*Portas Disponíveis:* ${portasText}`;
+*Portas Disponíveis:* ${portasText}${blocoDetalhe}`;
 }

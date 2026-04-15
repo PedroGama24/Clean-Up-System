@@ -25,11 +25,11 @@ export function resolveIdentificacaoCtoForPersist(
   }
 
   if (isCidadeComTecnologiaSp(input.cidade) && input.tecnologia === "HW") {
-    const ct = input.hw_ct?.trim() ?? "";
-    const cb = input.hw_cb?.trim() ?? "";
-    const cd = input.hw_cd?.trim() ?? "";
     const bk = input.hw_bk?.trim() ?? "";
-    return `CT: ${ct} | CB: ${cb} | CD: ${cd} | BK: ${bk}`;
+    const cd = input.hw_cd?.trim() ?? "";
+    const cb = input.hw_cb?.trim() ?? "";
+    const ct = input.hw_ct?.trim() ?? "";
+    return `BK: ${bk} | CD: ${cd} | CB: ${cb} | CT: ${ct}`;
   }
 
   if (!isCidadeComTecnologiaSp(input.cidade)) {

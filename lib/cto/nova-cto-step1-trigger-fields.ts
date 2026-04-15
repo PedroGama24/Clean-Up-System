@@ -33,11 +33,11 @@ export function getNovaCtoStep1TriggerFieldNames(
     base.push("tecnologia");
     const t = values.tecnologia ?? "";
     if (t === "HW") {
-      base.push("hw_ct", "hw_cb", "hw_cd", "hw_bk");
+      base.push("hw_ct", "hw_cb", "hw_cd", "hw_bk", "possui_cordoaria");
     } else if (t === "NK") {
       base.push("identificacao_cto", "possui_cordoaria");
     } else if (t === "FH") {
-      base.push("identificacao_cto");
+      base.push("identificacao_cto", "possui_cordoaria");
     }
   } else {
     base.push("area_caixa", "valor_caixa");

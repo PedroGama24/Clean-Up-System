@@ -27,6 +27,9 @@ import {
 /** Valor interno do Select (nunca conflita com HW/FH/NK); mantém o componente sempre controlado. */
 const TECNOLOGIA_SELECT_EMPTY = "__tec_none__";
 
+/** Mantém RadioGroup sempre controlado (evita undefined no primeiro render). */
+const CORDOARIA_RADIO_UNSET = "__cord_unset__";
+
 type CtoStep1IdentificacaoFieldsProps = {
   control: Control<NovaCtoFormValues>;
   register: UseFormRegister<NovaCtoFormValues>;
@@ -140,10 +143,10 @@ export function CtoStep1IdentificacaoFields({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
-              ["hw_ct", "CT"],
-              ["hw_cb", "CB"],
-              ["hw_cd", "CD"],
               ["hw_bk", "BK"],
+              ["hw_cd", "CD"],
+              ["hw_cb", "CB"],
+              ["hw_ct", "CT"],
             ] as const
           ).map(([name, label]) => (
             <Field key={name} data-invalid={!!errors[name]}>
@@ -176,37 +179,54 @@ export function CtoStep1IdentificacaoFields({
       )}
 
       {tecnologia === "NK" && (
-        <>
-          <Field data-invalid={!!errors.identificacao_cto}>
-            <FieldLabel htmlFor={`${p}identificacao_cto`}>
-              Identificação CTO
-            </FieldLabel>
-            <Input
-              id={`${p}identificacao_cto`}
-              className="max-w-lg"
-              autoComplete="off"
-              {...register("identificacao_cto")}
-            />
-            <FieldError errors={[errors.identificacao_cto]} />
-          </Field>
+        <Field data-invalid={!!errors.identificacao_cto}>
+          <FieldLabel htmlFor={`${p}identificacao_cto`}>
+            Identificação CTO
+          </FieldLabel>
+          <Input
+            id={`${p}identificacao_cto`}
+            className="max-w-lg"
+            autoComplete="off"
+            {...register("identificacao_cto")}
+          />
+          <FieldError errors={[errors.identificacao_cto]} />
+        </Field>
+      )}
 
-          <Field data-invalid={!!errors.possui_cordoaria}>
-            <FieldLegend className="text-sm">Possui cordoaria</FieldLegend>
-            <Controller
-              name="possui_cordoaria"
-              control={control}
-              render={({ field }) => (
+      {(tecnologia === "HW" ||
+        tecnologia === "FH" ||
+        tecnologia === "NK") && (
+        <Field data-invalid={!!errors.possui_cordoaria}>
+          <FieldLegend className="text-sm">Possui cordoaria</FieldLegend>
+          <Controller
+            name="possui_cordoaria"
+            control={control}
+            render={({ field }) => {
+              const radioValue =
+                field.value === true
+                  ? "sim"
+                  : field.value === false
+                    ? "nao"
+                    : CORDOARIA_RADIO_UNSET;
+              return (
                 <RadioGroup
                   className="flex flex-wrap gap-4"
-                  value={
-                    field.value === true
-                      ? "sim"
-                      : field.value === false
-                        ? "nao"
-                        : undefined
-                  }
-                  onValueChange={(v) => field.onChange(v === "sim")}
+                  value={radioValue}
+                  onValueChange={(v) => {
+                    if (v === CORDOARIA_RADIO_UNSET) {
+                      field.onChange(undefined);
+                    } else {
+                      field.onChange(v === "sim");
+                    }
+                  }}
                 >
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                    <RadioGroupItem
+                      value={CORDOARIA_RADIO_UNSET}
+                      id={`${p}cord-unset`}
+                    />
+                    <span>Selecione</span>
+                  </label>
                   <label className="flex cursor-pointer items-center gap-2 text-sm">
                     <RadioGroupItem value="sim" id={`${p}cord-sim`} />
                     <span>Sim</span>
@@ -216,11 +236,11 @@ export function CtoStep1IdentificacaoFields({
                     <span>Não</span>
                   </label>
                 </RadioGroup>
-              )}
-            />
-            <FieldError errors={[errors.possui_cordoaria]} />
-          </Field>
-        </>
+              );
+            }}
+          />
+          <FieldError errors={[errors.possui_cordoaria]} />
+        </Field>
       )}
     </>
   );

@@ -114,6 +114,13 @@ export const novaCtoFormSchema = z
             });
           }
         }
+        if (data.possui_cordoaria !== true && data.possui_cordoaria !== false) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Indique se possui cordoaria",
+            path: ["possui_cordoaria"],
+          });
+        }
         return;
       }
       if (tec === "NK") {
@@ -139,6 +146,13 @@ export const novaCtoFormSchema = z
             code: z.ZodIssueCode.custom,
             message: "Informe a identificação da CTO",
             path: ["identificacao_cto"],
+          });
+        }
+        if (data.possui_cordoaria !== true && data.possui_cordoaria !== false) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Indique se possui cordoaria",
+            path: ["possui_cordoaria"],
           });
         }
       }

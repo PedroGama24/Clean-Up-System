@@ -51,7 +51,7 @@ export function buildCadastroCtoPersistHeader(data: NovaCtoFormValues) {
     identificacao_cto,
     tecnologia: sp && tecnologia !== "" ? tecnologia : null,
     possui_cordoaria:
-      sp && tecnologia === "NK"
+      sp && (tecnologia === "HW" || tecnologia === "FH" || tecnologia === "NK")
         ? (data.possui_cordoaria as boolean)
         : null,
     hw_ct: sp && tecnologia === "HW" ? nullIfEmpty(data.hw_ct) : null,
