@@ -1,5 +1,9 @@
 import type { CtoCidade } from "@/lib/constants/cto-cidades";
-import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
+import {
+  CTO_CIDADES,
+  isCidadeComTecnologiaSp,
+} from "@/lib/constants/cto-cidades";
+import type { CtoTecnologia } from "@/lib/validations/nova-cto";
 import { isTecnicoCampo, TECNICOS_CAMPO } from "@/lib/constants/tecnico-campo";
 import type { EditCtoFormValues } from "@/lib/validations/edit-cto";
 import type { NovaCtoFormValues } from "@/lib/validations/nova-cto";
@@ -15,6 +19,14 @@ type CtoHeader = {
   slot: number | null;
   pon: number | null;
   capacidade: number;
+  tecnologia: string | null;
+  possui_cordoaria: boolean | null;
+  hw_ct: string | null;
+  hw_cb: string | null;
+  hw_cd: string | null;
+  hw_bk: string | null;
+  valor_caixa: string | null;
+  area_caixa: string | null;
 };
 
 type LoteRow = {
@@ -35,6 +47,31 @@ function safeTecnico(raw: string | null | undefined): string {
   return isTecnicoCampo(t) ? t : TECNICOS_CAMPO[0];
 }
 
+function inferTecnologiaSp(cto: CtoHeader): CtoTecnologia | "" {
+  if (!isCidadeComTecnologiaSp(cto.cidade)) {
+    return "";
+  }
+  const fromCol = cto.tecnologia?.trim();
+  if (fromCol === "HW" || fromCol === "FH" || fromCol === "NK") {
+    return fromCol;
+  }
+  if (
+    cto.hw_ct?.trim() ||
+    cto.hw_cb?.trim() ||
+    cto.hw_cd?.trim() ||
+    cto.hw_bk?.trim()
+  ) {
+    return "HW";
+  }
+  if (cto.possui_cordoaria === true || cto.possui_cordoaria === false) {
+    return "NK";
+  }
+  if (cto.identificacao_cto?.trim()) {
+    return "FH";
+  }
+  return "";
+}
+
 /** Monta valores iniciais do formulário de edição a partir do Supabase. */
 export function buildEditFormDefaults(
   cto: CtoHeader,
@@ -48,10 +85,24 @@ export function buildEditFormDefaults(
       contrato: l.contrato?.trim() ? l.contrato.trim() : "",
     }));
 
+  const cidade = safeCidade(cto.cidade);
+  const tecnologia = inferTecnologiaSp(cto);
+
   return {
     id: cto.id,
-    cidade: safeCidade(cto.cidade),
+    cidade,
     identificacao_cto: cto.identificacao_cto ?? "",
+    tecnologia,
+    possui_cordoaria:
+      cto.possui_cordoaria === true || cto.possui_cordoaria === false
+        ? cto.possui_cordoaria
+        : undefined,
+    hw_ct: cto.hw_ct?.trim() ? cto.hw_ct : "",
+    hw_cb: cto.hw_cb?.trim() ? cto.hw_cb : "",
+    hw_cd: cto.hw_cd?.trim() ? cto.hw_cd : "",
+    hw_bk: cto.hw_bk?.trim() ? cto.hw_bk : "",
+    area_caixa: cto.area_caixa?.trim() ? cto.area_caixa : "",
+    valor_caixa: cto.valor_caixa?.trim() ? cto.valor_caixa : "",
     tecnico_campo: safeTecnico(cto.tecnico_campo),
     olt: cto.olt ?? "",
     slot: cto.slot != null ? String(cto.slot) : "",

@@ -168,7 +168,7 @@ export function DashboardCtoSection({
               {metrics.totalVagasLivres}
             </p>
             <p className="mt-1 text-muted-foreground text-xs">
-              Soma das vagas atuais (status Livre)
+              Soma das vagas atuais (portas com status começando em Livre)
             </p>
           </CardContent>
         </Card>

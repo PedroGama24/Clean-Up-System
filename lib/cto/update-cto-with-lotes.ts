@@ -1,8 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { PORT_STATUS } from "@/lib/constants/cto";
+import { PORT_STATUS, portStatusRequiresContract } from "@/lib/constants/cto";
 import { editCtoFormSchema } from "@/lib/validations/edit-cto";
 
+import { buildCadastroCtoPersistHeader } from "./cadastro-cto-persist-header";
+import {
+  DUPLICATE_IDENTIFICACAO_CTO_MESSAGE,
+  findCadastroCtoDuplicateByIdentificacao,
+} from "./check-duplicate-identificacao-cto";
 import { resolveBkoNome } from "./resolve-bko-nome";
 
 function parseOptionalInt(s: string | undefined): number | null {
@@ -16,7 +21,7 @@ function parseOptionalInt(s: string | undefined): number | null {
  * A trigger `trg_lotes_recalc_cto` recalcula `vagas_atuais` e `ultimo_cleanup`.
  *
  * Capacidade 16→8: o payload deve trazer só portas 1–8; lotes 9–16 somem no replace.
- * Capacidade 8→16: se vierem só 8 portas, completa 9–16 como Livre antes do insert.
+ * Capacidade 8→16: se vierem só 8 portas, completa 9–16 como Livre - Sem Queda antes do insert.
  */
 export async function updateCtoWithLotesForUser(
   supabase: SupabaseClient,
@@ -48,7 +53,7 @@ export async function updateCtoWithLotesForUser(
     for (let n = 9; n <= 16; n++) {
       portasNormalized.push({
         numero_porta: n,
-        status: PORT_STATUS.LIVRE,
+        status: PORT_STATUS.LIVRE_SEM_QUEDA,
         contrato: "",
       });
     }
@@ -71,12 +76,31 @@ export async function updateCtoWithLotesForUser(
       : data.observacoes.trim();
 
   const bko_nome = await resolveBkoNome(supabase);
+  const headerExtras = buildCadastroCtoPersistHeader(data);
+
+  const dup = await findCadastroCtoDuplicateByIdentificacao(
+    supabase,
+    data.cidade,
+    headerExtras.identificacao_cto,
+    data.id,
+  );
+  if (dup.duplicate) {
+    return { error: dup.message };
+  }
 
   const { error: updateError } = await supabase
     .from("cadastro_cto")
     .update({
       cidade: data.cidade,
-      identificacao_cto: data.identificacao_cto.trim(),
+      identificacao_cto: headerExtras.identificacao_cto,
+      tecnologia: headerExtras.tecnologia,
+      possui_cordoaria: headerExtras.possui_cordoaria,
+      hw_ct: headerExtras.hw_ct,
+      hw_cb: headerExtras.hw_cb,
+      hw_cd: headerExtras.hw_cd,
+      hw_bk: headerExtras.hw_bk,
+      valor_caixa: headerExtras.valor_caixa,
+      area_caixa: headerExtras.area_caixa,
       tecnico_campo: data.tecnico_campo,
       bko_nome,
       observacoes,
@@ -88,6 +112,9 @@ export async function updateCtoWithLotesForUser(
     .eq("id", data.id);
 
   if (updateError) {
+    if (updateError.code === "23505") {
+      return { error: DUPLICATE_IDENTIFICACAO_CTO_MESSAGE };
+    }
     return { error: updateError.message };
   }
 
@@ -95,8 +122,9 @@ export async function updateCtoWithLotesForUser(
     cto_id: data.id,
     numero_porta: p.numero_porta,
     status: p.status,
-    contrato:
-      p.status === PORT_STATUS.COM_CONTRATO ? p.contrato!.trim() : null,
+    contrato: portStatusRequiresContract(p.status)
+      ? p.contrato!.trim()
+      : null,
   }));
 
   const { error: deleteError } = await supabase

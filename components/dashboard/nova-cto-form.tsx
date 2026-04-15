@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -36,23 +36,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { CtoStep1IdentificacaoFields } from "@/components/dashboard/cto-step1-identificacao-fields";
 import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
-import { PORT_STATUS } from "@/lib/constants/cto";
+import { isCidadeComTecnologiaSp } from "@/lib/constants/cto-cidades";
+import { PORT_STATUS, portStatusRequiresContract } from "@/lib/constants/cto";
+import { checkCtoDuplicateAtStep1 } from "@/lib/cto/check-duplicate-cto-client";
+import { getNovaCtoStep1TriggerFieldNames } from "@/lib/cto/nova-cto-step1-trigger-fields";
 import { cn } from "@/lib/utils";
 import {
   novaCtoFormSchema,
   PORT_STATUSES,
   type NovaCtoFormValues,
 } from "@/lib/validations/nova-cto";
-
-const step1Fields = [
-  "cidade",
-  "identificacao_cto",
-  "tecnico_campo",
-  "olt",
-  "slot",
-  "pon",
-] as const satisfies readonly (keyof NovaCtoFormValues)[];
 
 export function NovaCtoForm() {
   const router = useRouter();
@@ -64,6 +59,14 @@ export function NovaCtoForm() {
     defaultValues: {
       cidade: "BMA",
       identificacao_cto: "",
+      tecnologia: "",
+      possui_cordoaria: undefined,
+      hw_ct: "",
+      hw_cb: "",
+      hw_cd: "",
+      hw_bk: "",
+      area_caixa: "",
+      valor_caixa: "",
       tecnico_campo: "",
       olt: "",
       slot: "",
@@ -79,10 +82,36 @@ export function NovaCtoForm() {
     register,
     handleSubmit,
     watch,
+    setValue,
+    setError,
+    clearErrors,
     trigger,
     getValues,
     formState: { errors },
   } = form;
+
+  const cidade = watch("cidade");
+  const tecnologia = watch("tecnologia") ?? "";
+
+  const didMountCidade = useRef(false);
+  useEffect(() => {
+    if (!didMountCidade.current) {
+      didMountCidade.current = true;
+      return;
+    }
+    if (isCidadeComTecnologiaSp(cidade)) {
+      setValue("area_caixa", "");
+      setValue("valor_caixa", "");
+    } else {
+      setValue("tecnologia", "");
+      setValue("hw_ct", "");
+      setValue("hw_cb", "");
+      setValue("hw_cd", "");
+      setValue("hw_bk", "");
+      setValue("possui_cordoaria", undefined);
+    }
+    clearErrors("root");
+  }, [cidade, setValue, clearErrors]);
 
   const { fields, replace } = useFieldArray({
     control,
@@ -100,15 +129,40 @@ export function NovaCtoForm() {
     replace(
       Array.from({ length: cap }, (_, i) => ({
         numero_porta: i + 1,
-        status: PORT_STATUS.LIVRE,
+        status: PORT_STATUS.LIVRE_SEM_QUEDA,
         contrato: "",
       })),
     );
   }
 
   async function goToStep2() {
-    const ok = await trigger([...step1Fields]);
+    clearErrors("root");
+    const ok = await trigger(getNovaCtoStep1TriggerFieldNames(getValues()));
     if (!ok) return;
+
+    const v = getValues();
+    const dup = await checkCtoDuplicateAtStep1({
+      cidade: v.cidade,
+      identificacao_cto: v.identificacao_cto,
+      tecnologia: v.tecnologia,
+      possui_cordoaria: v.possui_cordoaria,
+      hw_ct: v.hw_ct,
+      hw_cb: v.hw_cb,
+      hw_cd: v.hw_cd,
+      hw_bk: v.hw_bk,
+      area_caixa: v.area_caixa,
+      valor_caixa: v.valor_caixa,
+    });
+
+    if (!dup.ok) {
+      if ("message" in dup) {
+        setError("root", { type: "duplicate", message: dup.message });
+      } else {
+        toast.error(dup.error);
+      }
+      return;
+    }
+
     setStep(2);
   }
 
@@ -219,18 +273,13 @@ export function NovaCtoForm() {
                     <FieldError errors={[errors.cidade]} />
                   </Field>
 
-                  <Field data-invalid={!!errors.identificacao_cto}>
-                    <FieldLabel htmlFor="identificacao_cto">
-                      Identificação CTO
-                    </FieldLabel>
-                    <Input
-                      id="identificacao_cto"
-                      className="max-w-lg"
-                      autoComplete="off"
-                      {...register("identificacao_cto")}
-                    />
-                    <FieldError errors={[errors.identificacao_cto]} />
-                  </Field>
+                  <CtoStep1IdentificacaoFields
+                    control={control}
+                    register={register}
+                    errors={errors}
+                    cidade={cidade}
+                    tecnologia={tecnologia}
+                  />
 
                   <Field data-invalid={!!errors.tecnico_campo}>
                     <FieldLabel htmlFor="tecnico_campo">
@@ -271,6 +320,12 @@ export function NovaCtoForm() {
                   </div>
                 </FieldGroup>
               </FieldSet>
+
+              {errors.root?.message && (
+                <p className="mt-4 text-destructive text-sm" role="alert">
+                  {String(errors.root.message)}
+                </p>
+              )}
 
               <div className="mt-6 flex justify-end">
                 <Button type="button" onClick={goToStep2}>
@@ -364,8 +419,7 @@ export function NovaCtoForm() {
                   <TableBody>
                     {fields.map((field, index) => {
                       const st = watch(`portas.${index}.status`);
-                      const showContract =
-                        st === PORT_STATUS.COM_CONTRATO;
+                      const showContract = portStatusRequiresContract(st);
                       return (
                         <TableRow key={field.id}>
                           <TableCell className="align-middle font-medium">

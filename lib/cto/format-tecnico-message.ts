@@ -1,4 +1,4 @@
-import { PORT_STATUS } from "@/lib/constants/cto";
+import { portStatusIsVagaLivre } from "@/lib/constants/cto";
 import type { EditCtoFormValues } from "@/lib/validations/edit-cto";
 
 /** Lista em português: "3, 5, 8 e 12". */
@@ -26,7 +26,7 @@ export function buildTecnicoCleanUpMessage(
   const idCto = values.identificacao_cto.trim() || "—";
   const cidade = values.cidade;
   const tecnico = values.tecnico_campo.trim() || "—";
-  const livres = values.portas.filter((p) => p.status === PORT_STATUS.LIVRE);
+  const livres = values.portas.filter((p) => portStatusIsVagaLivre(p.status));
   const vagasLivres = livres.length;
   const nums = livres.map((p) => p.numero_porta);
   const portasText = formatPortasLivresList(nums);

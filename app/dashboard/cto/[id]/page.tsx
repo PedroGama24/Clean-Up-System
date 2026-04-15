@@ -21,7 +21,7 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
   const { data: cto, error: ctoError } = await supabase
     .from("cadastro_cto")
     .select(
-      "id, cidade, identificacao_cto, tecnico_campo, bko_nome, observacoes, olt, slot, pon, capacidade",
+      "id, cidade, identificacao_cto, tecnologia, possui_cordoaria, hw_ct, hw_cb, hw_cd, hw_bk, valor_caixa, area_caixa, tecnico_campo, bko_nome, observacoes, olt, slot, pon, capacidade",
     )
     .eq("id", id)
     .maybeSingle();
@@ -91,7 +91,8 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
             {" — "}
             Altere apenas o status das portas que sofreram mudança e clique em
             Salvar para registrar o Clean Up de hoje. As vagas livres são
-            recalculadas automaticamente ao salvar. Use{" "}
+            recalculadas automaticamente ao salvar (cada porta com status
+            começando por Livre conta como vaga livre). Use{" "}
             <span className="font-medium text-foreground">
               Gerar Mensagem para Técnico
             </span>{" "}
