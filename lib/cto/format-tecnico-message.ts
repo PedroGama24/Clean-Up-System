@@ -52,8 +52,12 @@ export function buildTecnicoCleanUpMessage(
       ? ""
       : `\n*Detalhe (portas livres / contrato):*\n${detalhePortas}`;
 
+  const obs = values.observacoes?.trim() ?? "";
+  const blocoObservacoes =
+    obs === "" ? "" : `\n*Observações (BKO):*\n${obs}`;
+
   return `✅ *Clean Up Concluído - Virtus Telecom*
 *CTO:* ${idCto} | *Cidade:* ${cidade} | *Técnico:* ${tecnico}
 *Vagas Livres:* ${vagasLivres}
-*Portas Disponíveis:* ${portasText}${blocoDetalhe}`;
+*Portas Disponíveis:* ${portasText}${blocoDetalhe}${blocoObservacoes}`;
 }
