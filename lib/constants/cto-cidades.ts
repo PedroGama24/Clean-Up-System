@@ -7,6 +7,7 @@ export const CTO_CIDADES_COM_TECNOLOGIA_SP = [
   "SST",
   "IBL",
   "SSTBO",
+  "BERT",
 ] as const;
 
 export function isCidadeComTecnologiaSp(cidade: string): boolean {
@@ -16,6 +17,7 @@ export function isCidadeComTecnologiaSp(cidade: string): boolean {
 /** Cidades permitidas no cadastro (Select estrito). */
 export const CTO_CIDADES = [
   "BMA",
+  "BERT",
   "BPI",
   "COLG",
   "IZA",
