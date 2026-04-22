@@ -23,7 +23,7 @@ export default function DashboardLayout({
 
       <div className="relative flex min-h-screen flex-col">
         <header className="sticky top-0 z-20 border-border/60 border-b bg-background/90 shadow-sm shadow-black/[0.02] backdrop-blur-md supports-[backdrop-filter]:bg-background/75 dark:shadow-black/20">
-          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:h-[3.75rem] sm:gap-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex h-14 w-full max-w-none items-center justify-between gap-3 px-4 sm:h-[3.75rem] sm:gap-4 sm:px-6 lg:px-10 xl:px-12">
             <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-8">
               <Link
                 href="/dashboard"
@@ -69,7 +69,7 @@ export default function DashboardLayout({
         </header>
 
         <main className="relative flex-1">
-          <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="mx-auto w-full max-w-none px-4 py-8 sm:px-6 sm:py-10 lg:px-10 xl:px-12">
             {children}
           </div>
         </main>

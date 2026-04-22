@@ -18,7 +18,9 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -58,6 +60,7 @@ export function NovaCtoForm() {
     resolver: zodResolver(novaCtoFormSchema),
     defaultValues: {
       cidade: "BMA",
+      semIdentificacao: false,
       identificacao_cto: "",
       tecnologia: "",
       possui_cordoaria: undefined,
@@ -91,7 +94,9 @@ export function NovaCtoForm() {
   } = form;
 
   const cidade = watch("cidade");
+  const semIdentificacao = watch("semIdentificacao");
   const tecnologia = watch("tecnologia") ?? "";
+  const prevSemIdent = useRef<boolean | null>(null);
 
   const didMountCidade = useRef(false);
   useEffect(() => {
@@ -112,6 +117,25 @@ export function NovaCtoForm() {
     }
     clearErrors("root");
   }, [cidade, setValue, clearErrors]);
+
+  useEffect(() => {
+    if (prevSemIdent.current === null) {
+      prevSemIdent.current = semIdentificacao;
+      return;
+    }
+    if (semIdentificacao && !prevSemIdent.current) {
+      setValue("identificacao_cto", "");
+      setValue("tecnologia", "");
+      setValue("possui_cordoaria", undefined);
+      setValue("hw_ct", "");
+      setValue("hw_cb", "");
+      setValue("hw_cd", "");
+      setValue("hw_bk", "");
+      setValue("area_caixa", "");
+      setValue("valor_caixa", "");
+    }
+    prevSemIdent.current = semIdentificacao;
+  }, [semIdentificacao, setValue]);
 
   const { fields, replace } = useFieldArray({
     control,
@@ -143,6 +167,7 @@ export function NovaCtoForm() {
     const v = getValues();
     const dup = await checkCtoDuplicateAtStep1({
       cidade: v.cidade,
+      semIdentificacao: v.semIdentificacao,
       identificacao_cto: v.identificacao_cto,
       tecnologia: v.tecnologia,
       possui_cordoaria: v.possui_cordoaria,
@@ -244,7 +269,12 @@ export function NovaCtoForm() {
               <FieldSet>
                 <FieldGroup>
                   <Field data-invalid={!!errors.cidade}>
-                    <FieldLabel htmlFor="cidade">Cidade</FieldLabel>
+                    <FieldLabel htmlFor="cidade">
+                      Cidade
+                      <span className="text-destructive" aria-hidden>
+                        *
+                      </span>
+                    </FieldLabel>
                     <Controller
                       name="cidade"
                       control={control}
@@ -252,11 +282,13 @@ export function NovaCtoForm() {
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
+                          required
                         >
                           <SelectTrigger
                             id="cidade"
                             className="h-8 w-full max-w-lg"
                             size="default"
+                            aria-required
                           >
                             <SelectValue placeholder="Selecione a cidade" />
                           </SelectTrigger>
@@ -273,13 +305,38 @@ export function NovaCtoForm() {
                     <FieldError errors={[errors.cidade]} />
                   </Field>
 
-                  <CtoStep1IdentificacaoFields
-                    control={control}
-                    register={register}
-                    errors={errors}
-                    cidade={cidade}
-                    tecnologia={tecnologia}
-                  />
+                  <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <Controller
+                      name="semIdentificacao"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="sem-ident-nova-cto"
+                          className="mt-0.5"
+                          checked={field.value}
+                          onCheckedChange={(c) => field.onChange(!!c)}
+                        />
+                      )}
+                    />
+                    <div className="min-w-0">
+                      <Label
+                        htmlFor="sem-ident-nova-cto"
+                        className="text-sm font-medium leading-snug"
+                      >
+                        CTO sem identificação visual
+                      </Label>
+                    </div>
+                  </div>
+
+                  {!semIdentificacao ? (
+                    <CtoStep1IdentificacaoFields
+                      control={control}
+                      register={register}
+                      errors={errors}
+                      cidade={cidade}
+                      tecnologia={tecnologia}
+                    />
+                  ) : null}
 
                   <Field data-invalid={!!errors.tecnico_campo}>
                     <FieldLabel htmlFor="tecnico_campo">

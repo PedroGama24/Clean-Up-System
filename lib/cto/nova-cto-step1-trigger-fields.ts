@@ -6,6 +6,7 @@ export function getNovaCtoStep1TriggerFieldNames(
   values: Pick<
     NovaCtoFormValues,
     | "cidade"
+    | "semIdentificacao"
     | "tecnologia"
     | "identificacao_cto"
     | "tecnico_campo"
@@ -28,6 +29,10 @@ export function getNovaCtoStep1TriggerFieldNames(
     "slot",
     "pon",
   ];
+
+  if (values.semIdentificacao) {
+    return base;
+  }
 
   if (isCidadeComTecnologiaSp(values.cidade)) {
     base.push("tecnologia");

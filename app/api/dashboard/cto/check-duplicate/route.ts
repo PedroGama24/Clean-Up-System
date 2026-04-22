@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const bodySchema = z.object({
   cidade: z.string().min(1),
+  semIdentificacao: z.boolean().optional().default(false),
   identificacao_cto: z.string(),
   tecnologia: z.union([z.enum(CTO_TECNOLOGIAS), z.literal("")]),
   possui_cordoaria: z.boolean().optional(),
@@ -51,8 +52,12 @@ export async function POST(request: Request) {
   }
 
   const b = parsed.data;
+  if (b.semIdentificacao) {
+    return NextResponse.json({ duplicate: false });
+  }
   const identificacao_cto = getResolvedIdentificacaoCtoForDuplicateCheck({
     cidade: b.cidade,
+    semIdentificacao: false,
     identificacao_cto: b.identificacao_cto,
     tecnologia: b.tecnologia,
     possui_cordoaria: b.possui_cordoaria,

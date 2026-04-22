@@ -23,7 +23,9 @@ export function formatPortasLivresList(nums: number[]): string {
 export function buildTecnicoCleanUpMessage(
   values: EditCtoFormValues,
 ): string {
-  const idCto = values.identificacao_cto.trim() || "—";
+  const idCto = values.semIdentificacao
+    ? "Sem Identificação"
+    : values.identificacao_cto.trim() || "—";
   const cidade = values.cidade;
   const tecnico = values.tecnico_campo.trim() || "—";
   const livres = values.portas.filter((p) => portStatusIsVagaLivre(p.status));

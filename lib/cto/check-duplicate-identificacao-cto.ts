@@ -16,6 +16,9 @@ export async function findCadastroCtoDuplicateByIdentificacao(
   if (!key) {
     return { duplicate: false };
   }
+  if (key === "Sem Identificação") {
+    return { duplicate: false };
+  }
 
   let q = supabase
     .from("cadastro_cto")

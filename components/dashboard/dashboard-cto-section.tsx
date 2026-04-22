@@ -86,6 +86,7 @@ export function DashboardCtoSection({
 }: DashboardCtoSectionProps) {
   const { searchParams, pushFilters, pending } = useFilterQuery();
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("none");
+  const [tableSortResetKey, setTableSortResetKey] = useState(0);
 
   const q = searchParams.get("q") ?? "";
   const cidade = searchParams.get("cidade") ?? "";
@@ -105,6 +106,7 @@ export function DashboardCtoSection({
 
   function clearAllFilters() {
     setQuickFilter("none");
+    setTableSortResetKey((k) => k + 1);
     pushFilters({ q: undefined, cidade: undefined, tecnico: undefined, bko: undefined });
   }
 
@@ -349,6 +351,14 @@ export function DashboardCtoSection({
       </div>
 
       <div className="space-y-3">
+        {filtered.length > 0 ? (
+          <p className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-muted-foreground text-xs sm:text-sm">
+            <span className="font-medium text-foreground">Dica:</span> a coluna{" "}
+            <span className="font-medium text-foreground">Ações</span> permanece
+            visível à direita ao rolar a tabela na horizontal. Em telas pequenas
+            aparece só o ícone de atualizar.
+          </p>
+        ) : null}
         {data.length > 0 && filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed bg-card/40 px-6 py-10 text-center">
             <p className="text-muted-foreground text-sm">
@@ -367,7 +377,11 @@ export function DashboardCtoSection({
             ) : null}
           </div>
         ) : (
-          <CtoDataTable data={filtered} showRowActions />
+          <CtoDataTable
+            data={filtered}
+            showRowActions
+            sortResetKey={tableSortResetKey}
+          />
         )}
       </div>
     </div>

@@ -31,7 +31,9 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -106,7 +108,9 @@ export function EditCtoForm({
   } = form;
 
   const cidade = watch("cidade");
+  const semIdentificacao = watch("semIdentificacao");
   const tecnologia = watch("tecnologia") ?? "";
+  const prevSemIdent = useRef<boolean | null>(null);
 
   const didMountCidade = useRef(false);
   useEffect(() => {
@@ -127,6 +131,25 @@ export function EditCtoForm({
     }
     clearErrors("root");
   }, [cidade, setValue, clearErrors]);
+
+  useEffect(() => {
+    if (prevSemIdent.current === null) {
+      prevSemIdent.current = semIdentificacao;
+      return;
+    }
+    if (semIdentificacao && !prevSemIdent.current) {
+      setValue("identificacao_cto", "");
+      setValue("tecnologia", "");
+      setValue("possui_cordoaria", undefined);
+      setValue("hw_ct", "");
+      setValue("hw_cb", "");
+      setValue("hw_cd", "");
+      setValue("hw_bk", "");
+      setValue("area_caixa", "");
+      setValue("valor_caixa", "");
+    }
+    prevSemIdent.current = semIdentificacao;
+  }, [semIdentificacao, setValue]);
 
   const { fields, replace } = useFieldArray({
     control,
@@ -166,6 +189,7 @@ export function EditCtoForm({
     const v = getValues();
     const dup = await checkCtoDuplicateAtStep1({
       cidade: v.cidade,
+      semIdentificacao: v.semIdentificacao,
       identificacao_cto: v.identificacao_cto,
       tecnologia: v.tecnologia,
       possui_cordoaria: v.possui_cordoaria,
@@ -264,7 +288,12 @@ export function EditCtoForm({
               <FieldSet>
                 <FieldGroup>
                   <Field data-invalid={!!errors.cidade}>
-                    <FieldLabel htmlFor="edit_cidade">Cidade</FieldLabel>
+                    <FieldLabel htmlFor="edit_cidade">
+                      Cidade
+                      <span className="text-destructive" aria-hidden>
+                        *
+                      </span>
+                    </FieldLabel>
                     <Controller
                       name="cidade"
                       control={control}
@@ -272,11 +301,13 @@ export function EditCtoForm({
                         <Select
                           value={field.value}
                           onValueChange={field.onChange}
+                          required
                         >
                           <SelectTrigger
                             id="edit_cidade"
                             className="h-8 w-full max-w-lg"
                             size="default"
+                            aria-required
                           >
                             <SelectValue placeholder="Selecione a cidade" />
                           </SelectTrigger>
@@ -293,16 +324,41 @@ export function EditCtoForm({
                     <FieldError errors={[errors.cidade]} />
                   </Field>
 
-                  <CtoStep1IdentificacaoFields
-                    control={control as unknown as Control<NovaCtoFormValues>}
-                    register={
-                      register as unknown as UseFormRegister<NovaCtoFormValues>
-                    }
-                    errors={errors as unknown as FieldErrors<NovaCtoFormValues>}
-                    cidade={cidade}
-                    tecnologia={tecnologia}
-                    idPrefix="edit"
-                  />
+                  <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <Controller
+                      name="semIdentificacao"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="sem-ident-edit-cto"
+                          className="mt-0.5"
+                          checked={field.value}
+                          onCheckedChange={(c) => field.onChange(!!c)}
+                        />
+                      )}
+                    />
+                    <div className="min-w-0">
+                      <Label
+                        htmlFor="sem-ident-edit-cto"
+                        className="text-sm font-medium leading-snug"
+                      >
+                        CTO sem identificação visual
+                      </Label>
+                    </div>
+                  </div>
+
+                  {!semIdentificacao ? (
+                    <CtoStep1IdentificacaoFields
+                      control={control as unknown as Control<NovaCtoFormValues>}
+                      register={
+                        register as unknown as UseFormRegister<NovaCtoFormValues>
+                      }
+                      errors={errors as unknown as FieldErrors<NovaCtoFormValues>}
+                      cidade={cidade}
+                      tecnologia={tecnologia}
+                      idPrefix="edit"
+                    />
+                  ) : null}
 
                   <Field data-invalid={!!errors.tecnico_campo}>
                     <FieldLabel htmlFor="edit_tecnico_campo">

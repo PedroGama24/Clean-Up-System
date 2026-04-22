@@ -43,10 +43,13 @@ const trimOrEmpty = (s: string | undefined) => s?.trim() ?? "";
 
 export const novaCtoFormSchema = z
   .object({
+    /** Sempre obrigatório, independente de `semIdentificacao` (não use superRefine para flexibilizar). */
     cidade: z
       .string()
-      .min(1, "Selecione a cidade")
+      .min(1, "Obrigatório")
       .refine((c) => CIDADE_SET.has(c), "Cidade inválida"),
+    /** Quando true, a validação e a persistência ignoram os campos de identificação. */
+    semIdentificacao: z.boolean(),
     identificacao_cto: z.string().max(500),
     tecnologia: z.union([z.enum(CTO_TECNOLOGIAS), z.literal("")]),
     possui_cordoaria: z.boolean().optional(),
@@ -88,6 +91,11 @@ export const novaCtoFormSchema = z
         message: `Configure exatamente ${data.capacidade} portas`,
         path: ["portas"],
       });
+    }
+  })
+  .superRefine((data, ctx) => {
+    if (data.semIdentificacao) {
+      return;
     }
 
     const sp = isCidadeComTecnologiaSp(data.cidade);

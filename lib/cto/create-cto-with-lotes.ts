@@ -56,6 +56,7 @@ export async function createCtoWithLotesForUser(
     .from("cadastro_cto")
     .insert({
       cidade: data.cidade,
+      sem_identificacao: data.semIdentificacao,
       identificacao_cto: headerExtras.identificacao_cto,
       tecnologia: headerExtras.tecnologia,
       possui_cordoaria: headerExtras.possui_cordoaria,

@@ -16,6 +16,7 @@ export async function checkCtoDuplicateAtStep1(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       cidade: input.cidade,
+      semIdentificacao: input.semIdentificacao ?? false,
       identificacao_cto: input.identificacao_cto,
       tecnologia: input.tecnologia ?? "",
       possui_cordoaria: input.possui_cordoaria,

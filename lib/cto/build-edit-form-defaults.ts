@@ -21,6 +21,7 @@ type CtoHeader = {
   capacidade: number;
   tecnologia: string | null;
   possui_cordoaria: boolean | null;
+  sem_identificacao: boolean | null;
   hw_ct: string | null;
   hw_cb: string | null;
   hw_cd: string | null;
@@ -83,11 +84,13 @@ export function buildEditFormDefaults(
     }));
 
   const cidade = safeCidade(cto.cidade);
-  const tecnologia = inferTecnologiaSp(cto);
+  const semId = cto.sem_identificacao === true;
+  const tecnologia = semId ? ("" as const) : inferTecnologiaSp(cto);
 
   return {
     id: cto.id,
     cidade,
+    semIdentificacao: semId,
     identificacao_cto: cto.identificacao_cto ?? "",
     tecnologia,
     possui_cordoaria:

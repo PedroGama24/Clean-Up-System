@@ -12,6 +12,7 @@ function nullIfEmpty(s: string | undefined | null): string | null {
 export type Step1IdentificacaoForDuplicateCheck = Pick<
   NovaCtoFormValues,
   | "cidade"
+  | "semIdentificacao"
   | "identificacao_cto"
   | "tecnologia"
   | "hw_ct"
@@ -26,12 +27,29 @@ export type Step1IdentificacaoForDuplicateCheck = Pick<
 export function getResolvedIdentificacaoCtoForDuplicateCheck(
   data: Step1IdentificacaoForDuplicateCheck,
 ): string {
+  if (data.semIdentificacao) {
+    return "Sem Identificação";
+  }
   return buildCadastroCtoPersistHeader(data as NovaCtoFormValues)
     .identificacao_cto;
 }
 
 /** Colunas extras do cabeçalho `cadastro_cto` + identificação resolvida para o INSERT/UPDATE. */
 export function buildCadastroCtoPersistHeader(data: NovaCtoFormValues) {
+  if (data.semIdentificacao) {
+    return {
+      identificacao_cto: "Sem Identificação",
+      tecnologia: null,
+      possui_cordoaria: null,
+      hw_ct: null,
+      hw_cb: null,
+      hw_cd: null,
+      hw_bk: null,
+      area_caixa: null,
+      valor_caixa: null,
+    };
+  }
+
   const sp = isCidadeComTecnologiaSp(data.cidade);
   const tecnologia = (data.tecnologia ?? "").trim();
 
