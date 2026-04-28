@@ -8,25 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { HistoricoCtoItem } from "@/lib/cto/fetch-historico";
+import { formatDateTimePtBr } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-function formatHistoricoDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) {
-    return "—";
-  }
-  const dateStr = d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-  const timeStr = d.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-  return `${dateStr} às ${timeStr}`;
-}
 
 function acaoLabel(acao: string): string {
   if (acao === "Criação") return "Criou";
@@ -89,7 +72,7 @@ export function CtoHistoricoAuditoria({
                   {h.bko_nome}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {acaoLabel(h.acao)} · {formatHistoricoDate(h.created_at)}
+                  {acaoLabel(h.acao)} · {formatDateTimePtBr(h.created_at)}
                 </p>
               </li>
             ))}
