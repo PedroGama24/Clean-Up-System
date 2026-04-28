@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CtoHistoricoAuditoria } from "@/components/dashboard/cto-historico-auditoria";
 import { EditCtoForm } from "@/components/dashboard/edit-cto-form";
 import { buttonVariants } from "@/components/ui/button";
 import { buildEditFormDefaults } from "@/lib/cto/build-edit-form-defaults";
+import { getHistoricoCto } from "@/lib/cto/fetch-historico";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +73,10 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
   }
 
   const defaults = buildEditFormDefaults(cto, lotesList);
+  const { data: historico, error: historicoError } = await getHistoricoCto(
+    supabase,
+    id,
+  );
 
   return (
     <div className="space-y-8">
@@ -100,6 +106,10 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
           </p>
         </div>
       </section>
+      <CtoHistoricoAuditoria
+        items={historico}
+        errorMessage={historicoError}
+      />
       <EditCtoForm
         defaultValues={defaults}
         autoOpenTecnicoDialog={autoOpenTecnicoDialog}

@@ -100,5 +100,15 @@ export async function createCtoWithLotesForUser(
     return { error: lotesError.message };
   }
 
+  const { error: historicoError } = await supabase.from("historico_cto").insert({
+    cto_id: cto.id,
+    bko_nome,
+    acao: "Criação",
+  });
+  if (historicoError) {
+    await supabase.from("cadastro_cto").delete().eq("id", cto.id);
+    return { error: historicoError.message };
+  }
+
   return { success: true, id: cto.id };
 }

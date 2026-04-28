@@ -43,6 +43,11 @@ import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
 import { isCidadeComTecnologiaSp } from "@/lib/constants/cto-cidades";
 import { PORT_STATUS, portStatusRequiresContract } from "@/lib/constants/cto";
 import { checkCtoDuplicateAtStep1 } from "@/lib/cto/check-duplicate-cto-client";
+import {
+  sanitizeAlnumUpperInput,
+  sanitizeDigitsInput,
+  sanitizeOltInput,
+} from "@/lib/cto/form-input-sanitize";
 import { getNovaCtoStep1TriggerFieldNames } from "@/lib/cto/nova-cto-step1-trigger-fields";
 import { cn } from "@/lib/utils";
 import {
@@ -143,6 +148,10 @@ export function NovaCtoForm() {
   });
 
   const capacidade = watch("capacidade");
+
+  const oltReg = register("olt");
+  const slotReg = register("slot");
+  const ponReg = register("pon");
 
   const stepLabels = useMemo(
     () => ["Dados da CTO", "Capacidade", "Portas", "Observações"],
@@ -359,19 +368,45 @@ export function NovaCtoForm() {
 
                   <Field data-invalid={!!errors.olt}>
                     <FieldLabel htmlFor="olt">OLT</FieldLabel>
-                    <Input id="olt" {...register("olt")} />
+                    <Input
+                      id="olt"
+                      autoComplete="off"
+                      {...oltReg}
+                      onChange={(e) => {
+                        e.target.value = sanitizeOltInput(e.target.value);
+                        oltReg.onChange(e);
+                      }}
+                    />
                     <FieldError errors={[errors.olt]} />
                   </Field>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field data-invalid={!!errors.slot}>
                       <FieldLabel htmlFor="slot">Slot</FieldLabel>
-                      <Input id="slot" inputMode="numeric" {...register("slot")} />
+                      <Input
+                        id="slot"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        {...slotReg}
+                        onChange={(e) => {
+                          e.target.value = sanitizeDigitsInput(e.target.value);
+                          slotReg.onChange(e);
+                        }}
+                      />
                       <FieldError errors={[errors.slot]} />
                     </Field>
                     <Field data-invalid={!!errors.pon}>
                       <FieldLabel htmlFor="pon">PON</FieldLabel>
-                      <Input id="pon" inputMode="numeric" {...register("pon")} />
+                      <Input
+                        id="pon"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        {...ponReg}
+                        onChange={(e) => {
+                          e.target.value = sanitizeDigitsInput(e.target.value);
+                          ponReg.onChange(e);
+                        }}
+                      />
                       <FieldError errors={[errors.pon]} />
                     </Field>
                   </div>

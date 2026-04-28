@@ -5,6 +5,11 @@ import {
 } from "@/lib/constants/cto-cidades";
 import type { CtoTecnologia } from "@/lib/validations/nova-cto";
 import { isTecnicoCampo, TECNICOS_CAMPO } from "@/lib/constants/tecnico-campo";
+import {
+  sanitizeAlnumUpperInput,
+  sanitizeDigitsInput,
+  sanitizeOltInput,
+} from "@/lib/cto/form-input-sanitize";
 import type { EditCtoFormValues } from "@/lib/validations/edit-cto";
 import type { NovaCtoFormValues } from "@/lib/validations/nova-cto";
 
@@ -87,26 +92,30 @@ export function buildEditFormDefaults(
   const semId = cto.sem_identificacao === true;
   const tecnologia = semId ? ("" as const) : inferTecnologiaSp(cto);
 
+  const identificacaoRaw = cto.identificacao_cto ?? "";
+
   return {
     id: cto.id,
     cidade,
     semIdentificacao: semId,
-    identificacao_cto: cto.identificacao_cto ?? "",
+    identificacao_cto: semId
+      ? identificacaoRaw
+      : sanitizeAlnumUpperInput(identificacaoRaw),
     tecnologia,
     possui_cordoaria:
       cto.possui_cordoaria === true || cto.possui_cordoaria === false
         ? cto.possui_cordoaria
         : undefined,
-    hw_ct: cto.hw_ct?.trim() ? cto.hw_ct : "",
-    hw_cb: cto.hw_cb?.trim() ? cto.hw_cb : "",
-    hw_cd: cto.hw_cd?.trim() ? cto.hw_cd : "",
-    hw_bk: cto.hw_bk?.trim() ? cto.hw_bk : "",
+    hw_ct: sanitizeAlnumUpperInput(cto.hw_ct ?? ""),
+    hw_cb: sanitizeAlnumUpperInput(cto.hw_cb ?? ""),
+    hw_cd: sanitizeAlnumUpperInput(cto.hw_cd ?? ""),
+    hw_bk: sanitizeAlnumUpperInput(cto.hw_bk ?? ""),
     area_caixa: cto.area_caixa?.trim() ? cto.area_caixa : "",
     valor_caixa: cto.valor_caixa?.trim() ? cto.valor_caixa : "",
     tecnico_campo: safeTecnico(cto.tecnico_campo),
-    olt: cto.olt ?? "",
-    slot: cto.slot != null ? String(cto.slot) : "",
-    pon: cto.pon != null ? String(cto.pon) : "",
+    olt: sanitizeOltInput(cto.olt ?? ""),
+    slot: cto.slot != null ? sanitizeDigitsInput(String(cto.slot)) : "",
+    pon: cto.pon != null ? sanitizeDigitsInput(String(cto.pon)) : "",
     observacoes: cto.observacoes?.trim() ? cto.observacoes : "",
     capacidade: cto.capacidade as 8 | 16,
     portas,

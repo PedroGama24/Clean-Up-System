@@ -18,6 +18,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { isCidadeComTecnologiaSp } from "@/lib/constants/cto-cidades";
+import { sanitizeAlnumUpperInput } from "@/lib/cto/form-input-sanitize";
 import { cn } from "@/lib/utils";
 import {
   CTO_TECNOLOGIAS,
@@ -50,6 +51,7 @@ export function CtoStep1IdentificacaoFields({
 }: CtoStep1IdentificacaoFieldsProps) {
   const p = idPrefix ? `${idPrefix}_` : "";
   const sp = isCidadeComTecnologiaSp(cidade);
+  const identificacaoReg = register("identificacao_cto");
 
   if (!sp) {
     return (
@@ -148,22 +150,29 @@ export function CtoStep1IdentificacaoFields({
               ["hw_cb", "CB"],
               ["hw_ct", "CT"],
             ] as const
-          ).map(([name, label]) => (
-            <Field key={name} data-invalid={!!errors[name]}>
-              <FieldLabel htmlFor={`${p}${name}`}>{label}</FieldLabel>
-              <Input
-                id={`${p}${name}`}
-                className="h-8"
-                autoComplete="off"
-                {...register(name)}
-              />
-              <FieldError errors={[errors[name]]} />
-            </Field>
-          ))}
+          ).map(([name, label]) => {
+            const reg = register(name);
+            return (
+              <Field key={name} data-invalid={!!errors[name]}>
+                <FieldLabel htmlFor={`${p}${name}`}>{label}</FieldLabel>
+                <Input
+                  id={`${p}${name}`}
+                  className="h-8"
+                  autoComplete="off"
+                  {...reg}
+                  onChange={(e) => {
+                    e.target.value = sanitizeAlnumUpperInput(e.target.value);
+                    reg.onChange(e);
+                  }}
+                />
+                <FieldError errors={[errors[name]]} />
+              </Field>
+            );
+          })}
         </div>
       )}
 
-      {tecnologia === "FH" && (
+      {(tecnologia === "FH" || tecnologia === "NK") && (
         <Field data-invalid={!!errors.identificacao_cto}>
           <FieldLabel htmlFor={`${p}identificacao_cto`}>
             Identificação CTO
@@ -172,22 +181,11 @@ export function CtoStep1IdentificacaoFields({
             id={`${p}identificacao_cto`}
             className="max-w-lg"
             autoComplete="off"
-            {...register("identificacao_cto")}
-          />
-          <FieldError errors={[errors.identificacao_cto]} />
-        </Field>
-      )}
-
-      {tecnologia === "NK" && (
-        <Field data-invalid={!!errors.identificacao_cto}>
-          <FieldLabel htmlFor={`${p}identificacao_cto`}>
-            Identificação CTO
-          </FieldLabel>
-          <Input
-            id={`${p}identificacao_cto`}
-            className="max-w-lg"
-            autoComplete="off"
-            {...register("identificacao_cto")}
+            {...identificacaoReg}
+            onChange={(e) => {
+              e.target.value = sanitizeAlnumUpperInput(e.target.value);
+              identificacaoReg.onChange(e);
+            }}
           />
           <FieldError errors={[errors.identificacao_cto]} />
         </Field>

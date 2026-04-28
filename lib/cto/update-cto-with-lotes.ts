@@ -143,5 +143,14 @@ export async function updateCtoWithLotesForUser(
     return { error: insertError.message };
   }
 
+  const { error: historicoError } = await supabase.from("historico_cto").insert({
+    cto_id: data.id,
+    bko_nome,
+    acao: "Atualização",
+  });
+  if (historicoError) {
+    return { error: historicoError.message };
+  }
+
   return { success: true };
 }

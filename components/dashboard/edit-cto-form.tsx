@@ -56,6 +56,11 @@ import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
 import { isCidadeComTecnologiaSp } from "@/lib/constants/cto-cidades";
 import { PORT_STATUS, portStatusRequiresContract } from "@/lib/constants/cto";
 import { checkCtoDuplicateAtStep1 } from "@/lib/cto/check-duplicate-cto-client";
+import {
+  sanitizeAlnumUpperInput,
+  sanitizeDigitsInput,
+  sanitizeOltInput,
+} from "@/lib/cto/form-input-sanitize";
 import { getNovaCtoStep1TriggerFieldNames } from "@/lib/cto/nova-cto-step1-trigger-fields";
 import { cn } from "@/lib/utils";
 import {
@@ -157,6 +162,10 @@ export function EditCtoForm({
   });
 
   const capacidade = watch("capacidade");
+
+  const oltReg = register("olt");
+  const slotReg = register("slot");
+  const ponReg = register("pon");
 
   const stepLabels = useMemo(
     () => ["Dados da CTO", "Capacidade", "Portas", "Observações"],
@@ -381,7 +390,15 @@ export function EditCtoForm({
 
                   <Field data-invalid={!!errors.olt}>
                     <FieldLabel htmlFor="edit_olt">OLT</FieldLabel>
-                    <Input id="edit_olt" {...register("olt")} />
+                    <Input
+                      id="edit_olt"
+                      autoComplete="off"
+                      {...oltReg}
+                      onChange={(e) => {
+                        e.target.value = sanitizeOltInput(e.target.value);
+                        oltReg.onChange(e);
+                      }}
+                    />
                     <FieldError errors={[errors.olt]} />
                   </Field>
 
@@ -391,7 +408,12 @@ export function EditCtoForm({
                       <Input
                         id="edit_slot"
                         inputMode="numeric"
-                        {...register("slot")}
+                        autoComplete="off"
+                        {...slotReg}
+                        onChange={(e) => {
+                          e.target.value = sanitizeDigitsInput(e.target.value);
+                          slotReg.onChange(e);
+                        }}
                       />
                       <FieldError errors={[errors.slot]} />
                     </Field>
@@ -400,7 +422,12 @@ export function EditCtoForm({
                       <Input
                         id="edit_pon"
                         inputMode="numeric"
-                        {...register("pon")}
+                        autoComplete="off"
+                        {...ponReg}
+                        onChange={(e) => {
+                          e.target.value = sanitizeDigitsInput(e.target.value);
+                          ponReg.onChange(e);
+                        }}
                       />
                       <FieldError errors={[errors.pon]} />
                     </Field>

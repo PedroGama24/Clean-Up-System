@@ -10,7 +10,28 @@ import {
 } from "@/lib/constants/cto";
 import { isTecnicoCampo } from "@/lib/constants/tecnico-campo";
 
+import {
+  MSG_APENAS_LETRAS_NUMEROS,
+  MSG_APENAS_LETRAS_NUMEROS_HIFEN_OLT,
+  MSG_APENAS_NUMEROS,
+} from "@/lib/cto/form-input-sanitize";
+
 const CIDADE_SET = new Set<string>(CTO_CIDADES);
+
+const alnumUpperRegex = /^[A-Z0-9]+$/;
+/** OLT permite hífen além de letras e números. */
+const oltRegex = /^[A-Z0-9-]+$/;
+const digitsOnlyRegex = /^\d+$/;
+
+function hwAlnumField() {
+  return z
+    .string()
+    .max(200)
+    .refine(
+      (s) => s === "" || alnumUpperRegex.test(s),
+      MSG_APENAS_LETRAS_NUMEROS,
+    );
+}
 
 export const CTO_TECNOLOGIAS = ["HW", "FH", "NK"] as const;
 export type CtoTecnologia = (typeof CTO_TECNOLOGIAS)[number];
@@ -53,31 +74,28 @@ export const novaCtoFormSchema = z
     identificacao_cto: z.string().max(500),
     tecnologia: z.union([z.enum(CTO_TECNOLOGIAS), z.literal("")]),
     possui_cordoaria: z.boolean().optional(),
-    hw_ct: z.string().max(200),
-    hw_cb: z.string().max(200),
-    hw_cd: z.string().max(200),
-    hw_bk: z.string().max(200),
+    hw_ct: hwAlnumField(),
+    hw_cb: hwAlnumField(),
+    hw_cd: hwAlnumField(),
+    hw_bk: hwAlnumField(),
     area_caixa: z.string().max(200),
     valor_caixa: z.string().max(200),
     tecnico_campo: z
       .string()
       .min(1, "Selecione o técnico de campo")
       .refine((s) => isTecnicoCampo(s), "Técnico inválido"),
-    olt: z.string().optional(),
+    olt: z
+      .string()
+      .min(1, "Obrigatório")
+      .regex(oltRegex, MSG_APENAS_LETRAS_NUMEROS_HIFEN_OLT),
     slot: z
       .string()
-      .optional()
-      .refine(
-        (s) => s == null || s === "" || /^-?\d+$/.test(s.trim()),
-        "Slot deve ser um número inteiro",
-      ),
+      .min(1, "Obrigatório")
+      .regex(digitsOnlyRegex, MSG_APENAS_NUMEROS),
     pon: z
       .string()
-      .optional()
-      .refine(
-        (s) => s == null || s === "" || /^-?\d+$/.test(s.trim()),
-        "PON deve ser um número inteiro",
-      ),
+      .min(1, "Obrigatório")
+      .regex(digitsOnlyRegex, MSG_APENAS_NUMEROS),
     capacidade: z.union([z.literal(8), z.literal(16)], {
       error: "Selecione a capacidade da caixa (8 ou 16 portas)",
     }),
@@ -179,6 +197,19 @@ export const novaCtoFormSchema = z
         code: z.ZodIssueCode.custom,
         message: "Informe o valor da caixa",
         path: ["valor_caixa"],
+      });
+    }
+  })
+  .superRefine((data, ctx) => {
+    if (data.semIdentificacao) {
+      return;
+    }
+    const id = trimOrEmpty(data.identificacao_cto);
+    if (id !== "" && !alnumUpperRegex.test(id)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: MSG_APENAS_LETRAS_NUMEROS,
+        path: ["identificacao_cto"],
       });
     }
   });
