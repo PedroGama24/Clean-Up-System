@@ -80,9 +80,14 @@ export async function updateCtoWithLotesForUser(
 
   const dup = await findCadastroCtoDuplicateByIdentificacao(
     supabase,
-    data.cidade,
-    headerExtras.identificacao_cto,
-    data.id,
+    {
+      identificacaoCto: headerExtras.identificacao_cto,
+      olt: data.olt,
+      slot: data.slot,
+      pon: data.pon,
+      tecnologia: headerExtras.tecnologia,
+      excludeCtoId: data.id,
+    },
   );
   if (dup.duplicate) {
     return { error: dup.message };

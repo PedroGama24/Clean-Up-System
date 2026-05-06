@@ -10,6 +10,9 @@ const bodySchema = z.object({
   cidade: z.string().min(1),
   semIdentificacao: z.boolean().optional().default(false),
   identificacao_cto: z.string(),
+  olt: z.string(),
+  slot: z.string(),
+  pon: z.string(),
   tecnologia: z.union([z.enum(CTO_TECNOLOGIAS), z.literal("")]),
   possui_cordoaria: z.boolean().optional(),
   hw_ct: z.string(),
@@ -71,9 +74,14 @@ export async function POST(request: Request) {
 
   const dup = await findCadastroCtoDuplicateByIdentificacao(
     supabase,
-    b.cidade,
-    identificacao_cto,
-    b.excludeCtoId,
+    {
+      identificacaoCto: identificacao_cto,
+      olt: b.olt,
+      slot: b.slot,
+      pon: b.pon,
+      tecnologia: b.tecnologia,
+      excludeCtoId: b.excludeCtoId,
+    },
   );
 
   if (dup.duplicate) {

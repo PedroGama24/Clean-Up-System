@@ -1,6 +1,9 @@
 import type { Step1IdentificacaoForDuplicateCheck } from "@/lib/cto/cadastro-cto-persist-header";
 
 export type CheckDuplicateStep1Input = Step1IdentificacaoForDuplicateCheck & {
+  olt: string;
+  slot: string;
+  pon: string;
   excludeCtoId?: string;
 };
 
@@ -18,6 +21,9 @@ export async function checkCtoDuplicateAtStep1(
       cidade: input.cidade,
       semIdentificacao: input.semIdentificacao ?? false,
       identificacao_cto: input.identificacao_cto,
+      olt: input.olt,
+      slot: input.slot,
+      pon: input.pon,
       tecnologia: input.tecnologia ?? "",
       possui_cordoaria: input.possui_cordoaria,
       hw_ct: input.hw_ct ?? "",

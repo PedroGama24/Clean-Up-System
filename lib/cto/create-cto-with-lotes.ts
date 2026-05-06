@@ -45,8 +45,13 @@ export async function createCtoWithLotesForUser(
 
   const dup = await findCadastroCtoDuplicateByIdentificacao(
     supabase,
-    data.cidade,
-    headerExtras.identificacao_cto,
+    {
+      identificacaoCto: headerExtras.identificacao_cto,
+      olt: data.olt,
+      slot: data.slot,
+      pon: data.pon,
+      tecnologia: headerExtras.tecnologia,
+    },
   );
   if (dup.duplicate) {
     return { error: dup.message };
