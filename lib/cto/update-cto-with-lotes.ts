@@ -108,6 +108,7 @@ export async function updateCtoWithLotesForUser(
       valor_caixa: headerExtras.valor_caixa,
       area_caixa: headerExtras.area_caixa,
       tecnico_campo: data.tecnico_campo,
+      contrato: data.contrato.trim(),
       bko_nome,
       observacoes,
       olt: data.olt?.trim() || null,
@@ -152,6 +153,7 @@ export async function updateCtoWithLotesForUser(
     cto_id: data.id,
     bko_nome,
     acao: "Atualização",
+    contrato: data.contrato.trim(),
   });
   if (historicoError) {
     return { error: historicoError.message };

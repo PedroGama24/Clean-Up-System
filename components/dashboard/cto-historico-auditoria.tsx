@@ -63,7 +63,13 @@ export function CtoHistoricoAuditoria({
           </p>
         ) : (
           <ol className="m-0 max-h-[min(24rem,60vh)] space-y-2.5 overflow-y-auto p-0">
-            {items.map((h) => (
+            {items.map((h) => {
+              const contratoTrim = h.contrato?.trim();
+              const acao = acaoLabel(h.acao);
+              const linhaAcao = contratoTrim
+                ? `${acao} (Contrato: ${contratoTrim}) · ${formatDateTimePtBr(h.created_at)}`
+                : `${acao} · ${formatDateTimePtBr(h.created_at)}`;
+              return (
               <li
                 key={h.id}
                 className="rounded-lg border border-border/60 bg-muted/10 px-3.5 py-2.5"
@@ -72,10 +78,11 @@ export function CtoHistoricoAuditoria({
                   {h.bko_nome}
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  {acaoLabel(h.acao)} · {formatDateTimePtBr(h.created_at)}
+                  {linhaAcao}
                 </p>
               </li>
-            ))}
+              );
+            })}
           </ol>
         )}
       </CardContent>

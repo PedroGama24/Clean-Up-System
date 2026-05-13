@@ -166,6 +166,7 @@ export function EditCtoForm({
   const oltReg = register("olt");
   const slotReg = register("slot");
   const ponReg = register("pon");
+  const contratoReg = register("contrato");
 
   const stepLabels = useMemo(
     () => ["Dados da CTO", "Capacidade", "Portas", "Observações"],
@@ -372,24 +373,40 @@ export function EditCtoForm({
                     />
                   ) : null}
 
-                  <Field data-invalid={!!errors.tecnico_campo}>
-                    <FieldLabel htmlFor="edit_tecnico_campo">
-                      Técnico de campo
-                    </FieldLabel>
-                    <Controller
-                      name="tecnico_campo"
-                      control={control}
-                      render={({ field }) => (
-                        <TecnicoCampoCombobox
-                          id="edit_tecnico_campo"
-                          value={field.value}
-                          onChange={field.onChange}
-                          invalid={!!errors.tecnico_campo}
-                        />
-                      )}
-                    />
-                    <FieldError errors={[errors.tecnico_campo]} />
-                  </Field>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field data-invalid={!!errors.tecnico_campo}>
+                      <FieldLabel htmlFor="edit_tecnico_campo">
+                        Técnico de campo
+                      </FieldLabel>
+                      <Controller
+                        name="tecnico_campo"
+                        control={control}
+                        render={({ field }) => (
+                          <TecnicoCampoCombobox
+                            id="edit_tecnico_campo"
+                            value={field.value}
+                            onChange={field.onChange}
+                            invalid={!!errors.tecnico_campo}
+                          />
+                        )}
+                      />
+                      <FieldError errors={[errors.tecnico_campo]} />
+                    </Field>
+                    <Field data-invalid={!!errors.contrato}>
+                      <FieldLabel htmlFor="edit_contrato">Contrato</FieldLabel>
+                      <Input
+                        id="edit_contrato"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        {...contratoReg}
+                        onChange={(e) => {
+                          e.target.value = sanitizeDigitsInput(e.target.value);
+                          contratoReg.onChange(e);
+                        }}
+                      />
+                      <FieldError errors={[errors.contrato]} />
+                    </Field>
+                  </div>
 
                   <Field data-invalid={!!errors.olt}>
                     <FieldLabel htmlFor="edit_olt">OLT</FieldLabel>

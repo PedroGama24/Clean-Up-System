@@ -10,6 +10,7 @@ export function getNovaCtoStep1TriggerFieldNames(
     | "tecnologia"
     | "identificacao_cto"
     | "tecnico_campo"
+    | "contrato"
     | "olt"
     | "slot"
     | "pon"
@@ -25,6 +26,7 @@ export function getNovaCtoStep1TriggerFieldNames(
   const base: (keyof NovaCtoFormValues)[] = [
     "cidade",
     "tecnico_campo",
+    "contrato",
     "olt",
     "slot",
     "pon",

@@ -17,6 +17,7 @@ type CtoHeader = {
   id: string;
   cidade: string;
   identificacao_cto: string;
+  contrato: string | null;
   tecnico_campo: string;
   bko_nome: string | null;
   observacoes: string | null;
@@ -113,6 +114,7 @@ export function buildEditFormDefaults(
     area_caixa: cto.area_caixa?.trim() ? cto.area_caixa : "",
     valor_caixa: cto.valor_caixa?.trim() ? cto.valor_caixa : "",
     tecnico_campo: safeTecnico(cto.tecnico_campo),
+    contrato: sanitizeDigitsInput(cto.contrato ?? ""),
     olt: sanitizeOltInput(cto.olt ?? ""),
     slot: cto.slot != null ? sanitizeDigitsInput(String(cto.slot)) : "",
     pon: cto.pon != null ? sanitizeDigitsInput(String(cto.pon)) : "",

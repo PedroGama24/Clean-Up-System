@@ -5,6 +5,7 @@ export type HistoricoCtoItem = {
   cto_id: string;
   bko_nome: string;
   acao: string;
+  contrato: string | null;
   created_at: string;
 };
 
@@ -17,7 +18,7 @@ export async function getHistoricoCto(
 ): Promise<{ data: HistoricoCtoItem[]; error: string | null }> {
   const { data, error } = await supabase
     .from("historico_cto")
-    .select("id, cto_id, bko_nome, acao, created_at")
+    .select("id, cto_id, bko_nome, acao, contrato, created_at")
     .eq("cto_id", ctoId)
     .order("created_at", { ascending: false });
 

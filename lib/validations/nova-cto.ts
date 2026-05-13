@@ -84,6 +84,11 @@ export const novaCtoFormSchema = z
       .string()
       .min(1, "Selecione o técnico de campo")
       .refine((s) => isTecnicoCampo(s), "Técnico inválido"),
+    /** Contrato da operação (cabeçalho); apenas dígitos; distinto do contrato por porta em `portas`. */
+    contrato: z
+      .string()
+      .min(1, "Obrigatório")
+      .regex(digitsOnlyRegex, MSG_APENAS_NUMEROS),
     olt: z
       .string()
       .min(1, "Obrigatório")

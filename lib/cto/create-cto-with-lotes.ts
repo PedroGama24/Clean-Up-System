@@ -72,6 +72,7 @@ export async function createCtoWithLotesForUser(
       valor_caixa: headerExtras.valor_caixa,
       area_caixa: headerExtras.area_caixa,
       tecnico_campo: data.tecnico_campo,
+      contrato: data.contrato.trim(),
       bko_nome,
       observacoes,
       olt: data.olt?.trim() || null,
@@ -109,6 +110,7 @@ export async function createCtoWithLotesForUser(
     cto_id: cto.id,
     bko_nome,
     acao: "Criação",
+    contrato: data.contrato.trim(),
   });
   if (historicoError) {
     await supabase.from("cadastro_cto").delete().eq("id", cto.id);

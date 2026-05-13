@@ -8,7 +8,7 @@ export type DashboardCtoFilters = {
 };
 
 const SELECT_COLUMNS =
-  "id, cidade, identificacao_cto, tecnico_campo, bko_nome, olt, slot, pon, capacidade, ultimo_cleanup, vagas_atuais";
+  "id, cidade, identificacao_cto, contrato, tecnico_campo, bko_nome, olt, slot, pon, capacidade, ultimo_cleanup, vagas_atuais";
 
 async function loadDistinctBkos(
   supabase: SupabaseClient,
@@ -30,7 +30,7 @@ async function loadDistinctBkos(
 
 /**
  * Lista CTOs para o painel com filtros server-side.
- * Busca geral (`q`): identificação CTO OU contrato em lotes_cto.
+ * Busca geral (`q`): identificação CTO OU contrato da operação (cabecalho) OU contrato em lotes_cto.
  */
 export async function fetchDashboardCtos(
   supabase: SupabaseClient,
@@ -49,6 +49,11 @@ export async function fetchDashboardCtos(
       .select("id")
       .ilike("identificacao_cto", like);
 
+    const { data: byHeaderContrato } = await supabase
+      .from("cadastro_cto")
+      .select("id")
+      .ilike("contrato", like);
+
     const { data: byContract } = await supabase
       .from("lotes_cto")
       .select("cto_id")
@@ -56,6 +61,9 @@ export async function fetchDashboardCtos(
 
     const ids = new Set<string>();
     for (const r of byIdent ?? []) {
+      if (r.id) ids.add(r.id);
+    }
+    for (const r of byHeaderContrato ?? []) {
       if (r.id) ids.add(r.id);
     }
     for (const r of byContract ?? []) {

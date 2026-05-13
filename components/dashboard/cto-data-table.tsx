@@ -28,6 +28,7 @@ export type CadastroCtoRow = {
   id: string;
   cidade: string;
   identificacao_cto: string;
+  contrato: string;
   tecnico_campo: string;
   bko_nome: string | null;
   capacidade: number;
@@ -71,6 +72,20 @@ const buildBaseColumns = (): ColumnDef<CadastroCtoRow>[] => [
       const v = getValue() as string;
       return v ? (
         <span className="block min-w-[10rem] max-w-[14rem] break-words sm:max-w-[18rem] lg:max-w-[22rem]">
+          {v}
+        </span>
+      ) : (
+        "—"
+      );
+    },
+  },
+  {
+    accessorKey: "contrato",
+    header: "Contrato",
+    cell: ({ getValue }) => {
+      const v = (getValue() as string | null | undefined)?.trim() ?? "";
+      return v ? (
+        <span className="block min-w-[8rem] max-w-[14rem] break-words sm:max-w-[18rem]">
           {v}
         </span>
       ) : (
@@ -229,6 +244,7 @@ export function CtoDataTable({
                 className={cn(
                   (header.column.id === "identificacao_cto" ||
                     header.column.id === "tecnico_campo" ||
+                    header.column.id === "contrato" ||
                     header.column.id === "bko_nome") &&
                     "whitespace-normal",
                 )}
@@ -253,6 +269,7 @@ export function CtoDataTable({
                 className={cn(
                   (cell.column.id === "identificacao_cto" ||
                     cell.column.id === "tecnico_campo" ||
+                    cell.column.id === "contrato" ||
                     cell.column.id === "bko_nome") &&
                     "whitespace-normal",
                 )}
