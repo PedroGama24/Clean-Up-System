@@ -16,7 +16,6 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { CTO_CIDADES } from "@/lib/constants/cto-cidades";
-import { TECNICOS_CAMPO } from "@/lib/constants/tecnico-campo";
 import { cn } from "@/lib/utils";
 
 /** Valor interno do item “sem filtro”; o rótulo exibido é sempre “Todas”/“Todos”. */
@@ -47,6 +46,8 @@ type QuickFilter = "none" | "criticas";
 type DashboardCtoSectionProps = {
   data: CadastroCtoRow[];
   distinctBkos: string[];
+  /** Nomes de técnicos para o filtro (origem dinâmica em `tecnicos.nome`). */
+  tecnicos: string[];
   metrics: {
     totalCtos: number;
     totalVagasLivres: number;
@@ -82,6 +83,7 @@ function useFilterQuery() {
 export function DashboardCtoSection({
   data,
   distinctBkos,
+  tecnicos,
   metrics,
 }: DashboardCtoSectionProps) {
   const { searchParams, pushFilters, pending } = useFilterQuery();
@@ -276,7 +278,10 @@ export function DashboardCtoSection({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>Todos</SelectItem>
-                {TECNICOS_CAMPO.map((t) => (
+                {(tecnico && !tecnicos.includes(tecnico)
+                  ? [tecnico, ...tecnicos]
+                  : tecnicos
+                ).map((t) => (
                   <SelectItem key={t} value={t}>
                     {t}
                   </SelectItem>

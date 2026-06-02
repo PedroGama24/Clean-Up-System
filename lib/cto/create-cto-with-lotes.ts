@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { portStatusRequiresContract } from "@/lib/constants/cto";
+import { tecnicoExists } from "@/lib/tecnicos/queries";
 import { novaCtoFormSchema } from "@/lib/validations/nova-cto";
 
 import { buildCadastroCtoPersistHeader } from "./cadastro-cto-persist-header";
@@ -32,6 +33,10 @@ export async function createCtoWithLotesForUser(
   }
 
   const data = parsed.data;
+
+  if (!(await tecnicoExists(supabase, data.tecnico_campo))) {
+    return { error: "Técnico inválido. Selecione um técnico cadastrado." };
+  }
 
   const slot = parseOptionalInt(data.slot);
   const pon = parseOptionalInt(data.pon);

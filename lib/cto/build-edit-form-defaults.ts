@@ -4,7 +4,6 @@ import {
   isCidadeComTecnologiaSp,
 } from "@/lib/constants/cto-cidades";
 import type { CtoTecnologia } from "@/lib/validations/nova-cto";
-import { isTecnicoCampo, TECNICOS_CAMPO } from "@/lib/constants/tecnico-campo";
 import {
   sanitizeAlnumUpperInput,
   sanitizeDigitsInput,
@@ -49,9 +48,13 @@ function safeCidade(raw: string | null | undefined): CtoCidade {
     : "BMA";
 }
 
+/**
+ * Mantém o nome do técnico salvo na CTO como valor histórico, mesmo que ele já
+ * não exista mais na tabela `tecnicos`. O ComboBox preserva esse valor e a
+ * validação de existência ocorre no servidor apenas quando o nome muda.
+ */
 function safeTecnico(raw: string | null | undefined): string {
-  const t = raw?.trim() ?? "";
-  return isTecnicoCampo(t) ? t : TECNICOS_CAMPO[0];
+  return raw?.trim() ?? "";
 }
 
 function inferTecnologiaSp(cto: CtoHeader): CtoTecnologia | "" {

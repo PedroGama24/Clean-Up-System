@@ -56,7 +56,12 @@ import {
   type NovaCtoFormValues,
 } from "@/lib/validations/nova-cto";
 
-export function NovaCtoForm() {
+type NovaCtoFormProps = {
+  /** Nomes de técnicos disponíveis (origem dinâmica em `tecnicos.nome`). */
+  tecnicos: string[];
+};
+
+export function NovaCtoForm({ tecnicos }: NovaCtoFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -365,6 +370,7 @@ export function NovaCtoForm() {
                             id="tecnico_campo"
                             value={field.value}
                             onChange={field.onChange}
+                            tecnicos={tecnicos}
                             invalid={!!errors.tecnico_campo}
                           />
                         )}

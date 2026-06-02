@@ -8,7 +8,6 @@ import {
   PORT_STATUS,
   portStatusRequiresContract,
 } from "@/lib/constants/cto";
-import { isTecnicoCampo } from "@/lib/constants/tecnico-campo";
 
 import {
   MSG_APENAS_LETRAS_NUMEROS,
@@ -80,10 +79,14 @@ export const novaCtoFormSchema = z
     hw_bk: hwAlnumField(),
     area_caixa: z.string().max(200),
     valor_caixa: z.string().max(200),
+    /**
+     * Apenas presença é validada aqui; a existência do nome em `tecnicos.nome`
+     * é verificada no servidor (create/update), pois a lista é dinâmica.
+     */
     tecnico_campo: z
       .string()
-      .min(1, "Selecione o técnico de campo")
-      .refine((s) => isTecnicoCampo(s), "Técnico inválido"),
+      .trim()
+      .min(1, "Selecione o técnico de campo"),
     /** Contrato da operação (cabeçalho); apenas dígitos; distinto do contrato por porta em `portas`. */
     contrato: z
       .string()

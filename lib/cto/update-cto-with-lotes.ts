@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { PORT_STATUS, portStatusRequiresContract } from "@/lib/constants/cto";
+import { tecnicoExists } from "@/lib/tecnicos/queries";
 import { editCtoFormSchema } from "@/lib/validations/edit-cto";
 
 import { buildCadastroCtoPersistHeader } from "./cadastro-cto-persist-header";
@@ -39,7 +40,7 @@ export async function updateCtoWithLotesForUser(
 
   const { data: prevRow, error: prevErr } = await supabase
     .from("cadastro_cto")
-    .select("capacidade")
+    .select("capacidade, tecnico_campo")
     .eq("id", data.id)
     .maybeSingle();
 
@@ -47,6 +48,16 @@ export async function updateCtoWithLotesForUser(
     return { error: prevErr.message };
   }
   const prevCap = (prevRow?.capacidade ?? data.capacidade) as 8 | 16;
+
+  // Aceita nomes da base; mantém o valor histórico já salvo nesta CTO mesmo que
+  // o técnico tenha sido removido (não quebra a edição de registros antigos).
+  const prevTecnico = (prevRow?.tecnico_campo ?? "").trim();
+  if (
+    data.tecnico_campo !== prevTecnico &&
+    !(await tecnicoExists(supabase, data.tecnico_campo))
+  ) {
+    return { error: "Técnico inválido. Selecione um técnico cadastrado." };
+  }
 
   let portasNormalized = [...data.portas];
   if (prevCap === 8 && data.capacidade === 16 && portasNormalized.length === 8) {

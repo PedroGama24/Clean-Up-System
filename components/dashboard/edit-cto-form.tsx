@@ -72,12 +72,15 @@ import { PORT_STATUSES } from "@/lib/validations/nova-cto";
 
 type EditCtoFormProps = {
   defaultValues: EditCtoFormValues;
+  /** Nomes de técnicos disponíveis (origem dinâmica em `tecnicos.nome`). */
+  tecnicos: string[];
   /** Abre o modal de mensagem para técnico (ex.: após cadastrar CTO nova). */
   autoOpenTecnicoDialog?: boolean;
 };
 
 export function EditCtoForm({
   defaultValues,
+  tecnicos,
   autoOpenTecnicoDialog = false,
 }: EditCtoFormProps) {
   const router = useRouter();
@@ -386,6 +389,7 @@ export function EditCtoForm({
                             id="edit_tecnico_campo"
                             value={field.value}
                             onChange={field.onChange}
+                            tecnicos={tecnicos}
                             invalid={!!errors.tecnico_campo}
                           />
                         )}

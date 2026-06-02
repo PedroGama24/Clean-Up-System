@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Network } from "lucide-react";
+import { Network, Users } from "lucide-react";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { buttonVariants } from "@/components/ui/button";
@@ -61,6 +61,16 @@ export default function DashboardLayout({
                   className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
                 >
                   Novo clean up
+                </Link>
+                <Link
+                  href="/dashboard/tecnicos"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "gap-1.5",
+                  )}
+                >
+                  <Users className="size-4" aria-hidden />
+                  Técnicos
                 </Link>
               </nav>
             </div>

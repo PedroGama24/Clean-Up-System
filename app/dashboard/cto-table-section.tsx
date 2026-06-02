@@ -3,6 +3,7 @@ import { DashboardCtoSection } from "@/components/dashboard/dashboard-cto-sectio
 import { fetchDashboardCtos } from "@/lib/cto/fetch-dashboard-ctos";
 import { fetchDashboardMetrics } from "@/lib/cto/fetch-dashboard-metrics";
 import { createClient } from "@/lib/supabase/server";
+import { fetchTecnicoNomes } from "@/lib/tecnicos/queries";
 
 export type DashboardSearchParams = {
   q?: string;
@@ -19,7 +20,7 @@ export async function CtoTableSection({
   const supabase = await createClient();
 
   try {
-    const [{ rows, distinctBkos }, metricRows] = await Promise.all([
+    const [{ rows, distinctBkos }, metricRows, tecnicos] = await Promise.all([
       fetchDashboardCtos(supabase, {
         q: searchParams.q,
         cidade: searchParams.cidade,
@@ -27,6 +28,7 @@ export async function CtoTableSection({
         bko: searchParams.bko,
       }),
       fetchDashboardMetrics(supabase),
+      fetchTecnicoNomes(supabase),
     ]);
 
     const totalCtos = metricRows.length;
@@ -38,6 +40,7 @@ export async function CtoTableSection({
       <DashboardCtoSection
         data={rows as CadastroCtoRow[]}
         distinctBkos={distinctBkos}
+        tecnicos={tecnicos}
         metrics={{
           totalCtos,
           totalVagasLivres,

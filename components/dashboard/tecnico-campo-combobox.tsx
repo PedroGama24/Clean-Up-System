@@ -17,13 +17,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { TECNICOS_CAMPO } from "@/lib/constants/tecnico-campo";
 import { cn } from "@/lib/utils";
 
 type TecnicoCampoComboboxProps = {
   id?: string;
   value: string;
   onChange: (value: string) => void;
+  /** Nomes disponíveis (origem dinâmica em `tecnicos.nome`). */
+  tecnicos: string[];
   disabled?: boolean;
   invalid?: boolean;
 };
@@ -32,10 +33,20 @@ export function TecnicoCampoCombobox({
   id,
   value,
   onChange,
+  tecnicos,
   disabled,
   invalid,
 }: TecnicoCampoComboboxProps) {
   const [open, setOpen] = React.useState(false);
+
+  // Preserva valor histórico salvo numa CTO mesmo que o técnico tenha sido
+  // removido da base — assim a edição não perde o nome original.
+  const options = React.useMemo(() => {
+    if (value && !tecnicos.includes(value)) {
+      return [value, ...tecnicos];
+    }
+    return tecnicos;
+  }, [tecnicos, value]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -60,7 +71,7 @@ export function TecnicoCampoCombobox({
           <CommandList>
             <CommandEmpty>Nenhum técnico encontrado.</CommandEmpty>
             <CommandGroup>
-              {TECNICOS_CAMPO.map((nome) => (
+              {options.map((nome) => (
                 <CommandItem
                   key={nome}
                   value={nome}

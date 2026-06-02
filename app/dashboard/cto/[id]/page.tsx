@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { buildEditFormDefaults } from "@/lib/cto/build-edit-form-defaults";
 import { getHistoricoCto } from "@/lib/cto/fetch-historico";
 import { createClient } from "@/lib/supabase/server";
+import { fetchTecnicoNomes } from "@/lib/tecnicos/queries";
 import { cn } from "@/lib/utils";
 
 type PageProps = {
@@ -78,6 +79,13 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
     id,
   );
 
+  let tecnicos: string[] = [];
+  try {
+    tecnicos = await fetchTecnicoNomes(supabase);
+  } catch {
+    tecnicos = [];
+  }
+
   return (
     <div className="space-y-8">
       <section className="rounded-2xl border border-border/70 bg-card/50 p-6 shadow-md shadow-black/[0.03] ring-1 ring-border/40 backdrop-blur-sm sm:p-8 dark:shadow-black/25">
@@ -112,6 +120,7 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
       />
       <EditCtoForm
         defaultValues={defaults}
+        tecnicos={tecnicos}
         autoOpenTecnicoDialog={autoOpenTecnicoDialog}
       />
     </div>

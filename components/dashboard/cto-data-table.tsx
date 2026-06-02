@@ -190,6 +190,9 @@ type CtoDataTableProps = {
   sortResetKey?: number;
 };
 
+/** Ordenação inicial: último clean up do mais recente (desc) para o mais antigo. */
+const DEFAULT_SORTING: SortingState = [{ id: "ultimo_cleanup", desc: true }];
+
 const stickyActionsColumnClass =
   "[&_thead_th:last-child]:sticky [&_thead_th:last-child]:right-0 [&_thead_th:last-child]:z-20 [&_thead_th:last-child]:border-border/70 [&_thead_th:last-child]:border-l [&_thead_th:last-child]:bg-muted [&_thead_th:last-child]:shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.08)] dark:[&_thead_th:last-child]:shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.35)] [&_tbody_td:last-child]:sticky [&_tbody_td:last-child]:right-0 [&_tbody_td:last-child]:z-10 [&_tbody_td:last-child]:border-border/70 [&_tbody_td:last-child]:border-l [&_tbody_td:last-child]:bg-card [&_tbody_td:last-child]:shadow-[-6px_0_10px_-4px_rgba(0,0,0,0.06)] dark:[&_tbody_td:last-child]:bg-card dark:[&_tbody_td:last-child]:shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.35)] [&_tbody_tr:hover_td:last-child]:bg-muted/60";
 
@@ -198,10 +201,10 @@ export function CtoDataTable({
   showRowActions,
   sortResetKey = 0,
 }: CtoDataTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(DEFAULT_SORTING);
 
   useEffect(() => {
-    setSorting([]);
+    setSorting(DEFAULT_SORTING);
   }, [sortResetKey]);
 
   const columns = useMemo(
