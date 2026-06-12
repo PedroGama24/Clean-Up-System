@@ -327,7 +327,7 @@ export function DashboardCtoSection({
                 name="q"
                 key={q}
                 defaultValue={q}
-                placeholder="Identificação CTO ou contrato…"
+                placeholder="Identificação, contrato, bairro ou rua…"
                 autoComplete="off"
                 className="h-8 flex-1"
                 disabled={pending}

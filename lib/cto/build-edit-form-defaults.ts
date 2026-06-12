@@ -15,6 +15,8 @@ import type { NovaCtoFormValues } from "@/lib/validations/nova-cto";
 type CtoHeader = {
   id: string;
   cidade: string;
+  bairro: string | null;
+  rua: string | null;
   identificacao_cto: string;
   contrato: string | null;
   tecnico_campo: string;
@@ -101,6 +103,8 @@ export function buildEditFormDefaults(
   return {
     id: cto.id,
     cidade,
+    bairro: cto.bairro?.trim() ? cto.bairro : "",
+    rua: cto.rua?.trim() ? cto.rua : "",
     semIdentificacao: semId,
     identificacao_cto: semId
       ? identificacaoRaw

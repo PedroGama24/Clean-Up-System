@@ -24,7 +24,7 @@ export default async function EditCtoPage({ params, searchParams }: PageProps) {
   const { data: cto, error: ctoError } = await supabase
     .from("cadastro_cto")
     .select(
-      "id, cidade, identificacao_cto, sem_identificacao, tecnologia, possui_cordoaria, hw_ct, hw_cb, hw_cd, hw_bk, valor_caixa, area_caixa, tecnico_campo, contrato, bko_nome, observacoes, olt, slot, pon, capacidade",
+      "id, cidade, bairro, rua, identificacao_cto, sem_identificacao, tecnologia, possui_cordoaria, hw_ct, hw_cb, hw_cd, hw_bk, valor_caixa, area_caixa, tecnico_campo, contrato, bko_nome, observacoes, olt, slot, pon, capacidade",
     )
     .eq("id", id)
     .maybeSingle();

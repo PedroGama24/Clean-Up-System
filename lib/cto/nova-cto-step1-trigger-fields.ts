@@ -6,6 +6,8 @@ export function getNovaCtoStep1TriggerFieldNames(
   values: Pick<
     NovaCtoFormValues,
     | "cidade"
+    | "bairro"
+    | "rua"
     | "semIdentificacao"
     | "tecnologia"
     | "identificacao_cto"
@@ -25,6 +27,8 @@ export function getNovaCtoStep1TriggerFieldNames(
 ): (keyof NovaCtoFormValues)[] {
   const base: (keyof NovaCtoFormValues)[] = [
     "cidade",
+    "bairro",
+    "rua",
     "tecnico_campo",
     "contrato",
     "olt",

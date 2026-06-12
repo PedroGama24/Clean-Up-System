@@ -70,6 +70,8 @@ export function NovaCtoForm({ tecnicos }: NovaCtoFormProps) {
     resolver: zodResolver(novaCtoFormSchema),
     defaultValues: {
       cidade: "BMA",
+      bairro: "",
+      rua: "",
       semIdentificacao: false,
       identificacao_cto: "",
       tecnologia: "",
@@ -323,6 +325,29 @@ export function NovaCtoForm({ tecnicos }: NovaCtoFormProps) {
                     />
                     <FieldError errors={[errors.cidade]} />
                   </Field>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field data-invalid={!!errors.bairro}>
+                      <FieldLabel htmlFor="bairro">
+                        Bairro
+                        <span className="text-destructive" aria-hidden>
+                          *
+                        </span>
+                      </FieldLabel>
+                      <Input id="bairro" autoComplete="off" {...register("bairro")} />
+                      <FieldError errors={[errors.bairro]} />
+                    </Field>
+                    <Field data-invalid={!!errors.rua}>
+                      <FieldLabel htmlFor="rua">
+                        Rua
+                        <span className="text-destructive" aria-hidden>
+                          *
+                        </span>
+                      </FieldLabel>
+                      <Input id="rua" autoComplete="off" {...register("rua")} />
+                      <FieldError errors={[errors.rua]} />
+                    </Field>
+                  </div>
 
                   <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/20 p-3">
                     <Controller

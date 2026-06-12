@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CtoTableSection } from "@/app/dashboard/cto-table-section";
 import type { DashboardSearchParams } from "@/app/dashboard/cto-table-section";
 import { CtoTableSkeleton } from "@/app/dashboard/cto-table-skeleton";
+import { ExportCtosButton } from "@/components/dashboard/export-ctos-button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -37,15 +38,18 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               por identificação da CTO ou número de contrato.
             </p>
           </div>
-          <Link
-            href="/dashboard/nova-cto"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "inline-flex h-11 w-full shrink-0 justify-center font-medium shadow-sm sm:w-auto sm:min-w-[11rem]",
-            )}
-          >
-            Novo clean up
-          </Link>
+          <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <ExportCtosButton />
+            <Link
+              href="/dashboard/nova-cto"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "inline-flex h-11 w-full shrink-0 justify-center font-medium shadow-sm sm:w-auto sm:min-w-[11rem]",
+              )}
+            >
+              Novo clean up
+            </Link>
+          </div>
         </div>
       </section>
 

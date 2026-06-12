@@ -108,6 +108,8 @@ export async function updateCtoWithLotesForUser(
     .from("cadastro_cto")
     .update({
       cidade: data.cidade,
+      bairro: data.bairro.trim(),
+      rua: data.rua.trim(),
       sem_identificacao: data.semIdentificacao,
       identificacao_cto: headerExtras.identificacao_cto,
       tecnologia: headerExtras.tecnologia,

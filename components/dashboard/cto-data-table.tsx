@@ -27,6 +27,8 @@ import { cn } from "@/lib/utils";
 export type CadastroCtoRow = {
   id: string;
   cidade: string;
+  bairro: string | null;
+  rua: string | null;
   identificacao_cto: string;
   contrato: string;
   tecnico_campo: string;
@@ -55,6 +57,20 @@ const buildBaseColumns = (): ColumnDef<CadastroCtoRow>[] => [
     accessorKey: "cidade",
     header: "Cidade",
     cell: ({ getValue }) => (getValue() as string) ?? "—",
+  },
+  {
+    accessorKey: "bairro",
+    header: "Bairro",
+    cell: ({ getValue }) => {
+      const v = (getValue() as string | null)?.trim() ?? "";
+      return v ? (
+        <span className="block min-w-[8rem] max-w-[14rem] break-words sm:max-w-[18rem]">
+          {v}
+        </span>
+      ) : (
+        "—"
+      );
+    },
   },
   {
     accessorKey: "identificacao_cto",
@@ -245,7 +261,8 @@ export function CtoDataTable({
               <TableHead
                 key={header.id}
                 className={cn(
-                  (header.column.id === "identificacao_cto" ||
+                  (header.column.id === "bairro" ||
+                    header.column.id === "identificacao_cto" ||
                     header.column.id === "tecnico_campo" ||
                     header.column.id === "contrato" ||
                     header.column.id === "bko_nome") &&
@@ -270,7 +287,8 @@ export function CtoDataTable({
               <TableCell
                 key={cell.id}
                 className={cn(
-                  (cell.column.id === "identificacao_cto" ||
+                  (cell.column.id === "bairro" ||
+                    cell.column.id === "identificacao_cto" ||
                     cell.column.id === "tecnico_campo" ||
                     cell.column.id === "contrato" ||
                     cell.column.id === "bko_nome") &&

@@ -68,6 +68,9 @@ export const novaCtoFormSchema = z
       .string()
       .min(1, "Obrigatório")
       .refine((c) => CIDADE_SET.has(c), "Cidade inválida"),
+    /** Localização da CTO; sempre obrigatórios (independem de `semIdentificacao`). */
+    bairro: z.string().trim().min(1, "Campo obrigatório").max(200),
+    rua: z.string().trim().min(1, "Campo obrigatório").max(200),
     /** Quando true, a validação e a persistência ignoram os campos de identificação. */
     semIdentificacao: z.boolean(),
     identificacao_cto: z.string().max(500),
