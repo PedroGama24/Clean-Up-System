@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { computeDashboardMetrics } from "@/lib/cto/compute-dashboard-metrics";
 import {
   Select,
   SelectContent,
@@ -48,12 +49,6 @@ type DashboardCtoSectionProps = {
   distinctBkos: string[];
   /** Nomes de técnicos para o filtro (origem dinâmica em `tecnicos.nome`). */
   tecnicos: string[];
-  metrics: {
-    totalCtos: number;
-    totalVagasLivres: number;
-    criticas: number;
-    totalPortas: number;
-  };
 };
 
 function useFilterQuery() {
@@ -84,7 +79,6 @@ export function DashboardCtoSection({
   data,
   distinctBkos,
   tecnicos,
-  metrics,
 }: DashboardCtoSectionProps) {
   const { searchParams, pushFilters, pending } = useFilterQuery();
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("none");
@@ -101,6 +95,8 @@ export function DashboardCtoSection({
     }
     return data;
   }, [data, quickFilter]);
+
+  const metrics = useMemo(() => computeDashboardMetrics(filtered), [filtered]);
 
   const hasFacetFilters = cidade !== "" || tecnico !== "" || bko !== "";
   const hasActiveFilters =

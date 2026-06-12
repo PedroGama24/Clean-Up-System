@@ -1,7 +1,6 @@
 import { type CadastroCtoRow } from "@/components/dashboard/cto-data-table";
 import { DashboardCtoSection } from "@/components/dashboard/dashboard-cto-section";
 import { fetchDashboardCtos } from "@/lib/cto/fetch-dashboard-ctos";
-import { fetchDashboardMetrics } from "@/lib/cto/fetch-dashboard-metrics";
 import { createClient } from "@/lib/supabase/server";
 import { fetchTecnicoNomes } from "@/lib/tecnicos/queries";
 
@@ -20,33 +19,21 @@ export async function CtoTableSection({
   const supabase = await createClient();
 
   try {
-    const [{ rows, distinctBkos }, metricRows, tecnicos] = await Promise.all([
+    const [{ rows, distinctBkos }, tecnicos] = await Promise.all([
       fetchDashboardCtos(supabase, {
         q: searchParams.q,
         cidade: searchParams.cidade,
         tecnico: searchParams.tecnico,
         bko: searchParams.bko,
       }),
-      fetchDashboardMetrics(supabase),
       fetchTecnicoNomes(supabase),
     ]);
-
-    const totalCtos = metricRows.length;
-    const totalVagasLivres = metricRows.reduce((acc, r) => acc + r.vagas_atuais, 0);
-    const criticas = metricRows.filter((r) => r.vagas_atuais <= 1).length;
-    const totalPortas = metricRows.reduce((acc, r) => acc + r.capacidade, 0);
 
     return (
       <DashboardCtoSection
         data={rows as CadastroCtoRow[]}
         distinctBkos={distinctBkos}
         tecnicos={tecnicos}
-        metrics={{
-          totalCtos,
-          totalVagasLivres,
-          criticas,
-          totalPortas,
-        }}
       />
     );
   } catch (e) {
